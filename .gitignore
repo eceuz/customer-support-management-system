@@ -1,0 +1,17 @@
+# Sanal Ortam (En önemlisi, 3000+ dosyayı bu engeller)
+venv/
+env/
+ENV/
+
+# Python Önbellek Dosyaları
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Gizli Bilgiler ve Şifreler
+.env
+
+# Editör ve Sistem Dosyaları
+.vscode/
+.DS_Store
