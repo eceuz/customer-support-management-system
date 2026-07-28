@@ -77,3 +77,42 @@ class CagriResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class LoginRequest(BaseModel):
+    kullanici_adi: str
+    sifre: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+
+from datetime import datetime
+
+class CagriListeResponse(BaseModel):
+
+    cagri_kaydi_id: int
+
+    tarih: datetime
+
+    telefon: str | None
+
+    gorusulen_kisi: str | None
+
+    yapilanlar: str | None
+
+    sonuc: str | None
+
+    musteri_adi: str
+
+    sube_adi: str
+
+    ariza_tipi_adi: str
+
+    kullanici_adi: str
+
+class DashboardResponse(BaseModel):
+    bugun_acilan: int
+    bekleyen: int
+    servise_aktarilan: int
+    toplam_musteri: int

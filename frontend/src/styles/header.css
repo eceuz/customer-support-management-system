@@ -1,0 +1,127 @@
+.header {
+    height: 72px;
+    background: white;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 0 32px;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo-box {
+    width: 48px;
+    height: 48px;
+
+    border-radius: 12px;
+
+    background: #2563eb;
+    color: white;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo-box svg {
+    font-size: 28px !important;
+}
+
+.header-left h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #1f2937;
+}
+
+.header-left span {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+/* ---------------- NAVIGATION ---------------- */
+
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.header-nav button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+
+    font-size: 15px;
+    font-weight: 500;
+    color: #6b7280;
+
+    padding: 8px 14px;
+    border-radius: 10px;
+
+    transition: .2s;
+}
+
+.header-nav button:hover {
+    background: #f3f4f6;
+    color: #2563eb;
+}
+
+.header-nav button.active {
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+/* ---------------- RIGHT ---------------- */
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    cursor: pointer;
+
+    padding: 8px 12px;
+
+    border-radius: 12px;
+
+    transition: .2s;
+}
+
+.user-info:hover {
+    background: #f3f4f6;
+}
+
+.user-icon {
+    font-size: 42px !important;
+    color: #2563eb;
+}
+
+.user-info p {
+    margin: 0;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.user-info small {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.arrow {
+    color: #6b7280;
+}

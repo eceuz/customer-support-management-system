@@ -1,0 +1,23 @@
+.dashboard {
+    min-height: 100vh;
+    background: #f4f6f9;
+}
+
+.dashboard-main {
+    display: grid;
+    grid-template-columns: 380px minmax(0, 1fr); 
+    gap: 20px;
+    padding: 20px;
+    max-width: 1800px;
+    margin: auto;
+}
+
+.left-panel {
+    display: flex;
+}
+
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}

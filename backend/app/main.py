@@ -1,36 +1,36 @@
-from fastapi import FastAPI
-
-from .database import Base, engine
-from . import models
-
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-
-from . import models, schemas
+from typing import Optional
+from fastapi import Query
 from .database import Base, engine, get_db
+from . import schemas, crud
+from .security import create_access_token
+from fastapi import HTTPException
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.post("/musteriler", response_model=schemas.MusteriResponse)
 def musteri_olustur(
     musteri: schemas.MusteriCreate,
     db: Session = Depends(get_db)
 ):
-    yeni_musteri = models.Musteriler(
-        cari_adi=musteri.cari_adi,
-        musteri_adi=musteri.musteri_adi
-    )
+    return crud.create_musteri(db, musteri)
 
-    db.add(yeni_musteri)
-    db.commit()
-    db.refresh(yeni_musteri)
-
-    return yeni_musteri
 
 @app.get("/musteriler", response_model=list[schemas.MusteriResponse])
 def musterileri_listele(db: Session = Depends(get_db)):
-    return db.query(models.Musteriler).all()
+    return crud.get_musteriler(db)
 
 
 @app.post("/subeler", response_model=schemas.SubeResponse)
@@ -38,82 +38,104 @@ def sube_olustur(
     sube: schemas.SubeCreate,
     db: Session = Depends(get_db)
 ):
-    yeni_sube = models.Subeler(
-        musteri_id=sube.musteri_id,
-        sube_adi=sube.sube_adi,
-        bakim_anlasmasi_var_mi=sube.bakim_anlasmasi_var_mi
-    )
+    return crud.create_sube(db, sube)
 
-    db.add(yeni_sube)
-    db.commit()
-    db.refresh(yeni_sube)
-
-    return yeni_sube
 
 @app.get("/subeler", response_model=list[schemas.SubeResponse])
-def subeleri_listele(db: Session = Depends(get_db)):
-    return db.query(models.Subeler).all()
+def subeleri_listele(
+    musteri_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db)
+):
+    return crud.get_subeler(db, musteri_id)
+
+
 
 @app.post("/ariza-tipleri", response_model=schemas.ArizaTipiResponse)
 def ariza_tipi_olustur(
     ariza_tipi: schemas.ArizaTipiCreate,
     db: Session = Depends(get_db)
 ):
-    yeni_ariza_tipi = models.ArizaTipleri(
-        ariza_tipi_adi=ariza_tipi.ariza_tipi_adi
-    )
+    return crud.create_ariza_tipi(db, ariza_tipi)
 
-    db.add(yeni_ariza_tipi)
-    db.commit()
-    db.refresh(yeni_ariza_tipi)
-
-    return yeni_ariza_tipi
 
 @app.get("/ariza-tipleri", response_model=list[schemas.ArizaTipiResponse])
 def ariza_tiplerini_getir(db: Session = Depends(get_db)):
-    return db.query(models.ArizaTipleri).all()
+    return crud.get_ariza_tipleri(db)
+
+
 
 @app.post("/kullanicilar", response_model=schemas.KullaniciResponse)
 def kullanici_olustur(
     kullanici: schemas.KullaniciCreate,
     db: Session = Depends(get_db)
 ):
-    yeni_kullanici = models.Kullanicilar(
-        kullanici_adi=kullanici.kullanici_adi,
-        sifre=kullanici.sifre
-    )
+    return crud.create_kullanici(db, kullanici)
 
-    db.add(yeni_kullanici)
-    db.commit()
-    db.refresh(yeni_kullanici)
-
-    return yeni_kullanici
 
 @app.get("/kullanicilar", response_model=list[schemas.KullaniciResponse])
 def kullanicilari_getir(db: Session = Depends(get_db)):
-    return db.query(models.Kullanicilar).all()
+    return crud.get_kullanicilar(db)
+
 
 @app.post("/cagri-kayitlari", response_model=schemas.CagriResponse)
 def cagri_kaydi_olustur(
     cagri: schemas.CagriCreate,
     db: Session = Depends(get_db)
 ):
-    yeni_cagri = models.CagriKayitlari(
-        sube_id=cagri.sube_id,
-        kullanici_id=cagri.kullanici_id,
-        ariza_tipi_id=cagri.ariza_tipi_id,
-        telefon=cagri.telefon,
-        gorusulen_kisi=cagri.gorusulen_kisi,
-        yapilanlar=cagri.yapilanlar,
-        sonuc=cagri.sonuc
-    )
+    return crud.create_cagri(db, cagri)
 
-    db.add(yeni_cagri)
-    db.commit()
-    db.refresh(yeni_cagri)
-
-    return yeni_cagri
 
 @app.get("/cagri-kayitlari", response_model=list[schemas.CagriResponse])
 def cagri_kayitlari_getir(db: Session = Depends(get_db)):
-    return db.query(models.CagriKayitlari).all()
+    return crud.get_cagri_kayitlari(db)
+
+@app.post("/login", response_model=schemas.TokenResponse)
+def login(
+    request: schemas.LoginRequest,
+    db: Session = Depends(get_db)
+):
+
+    kullanici = crud.login(
+        db,
+        request.kullanici_adi,
+        request.sifre
+    )
+
+    if not kullanici:
+        raise HTTPException(
+            status_code=401,
+            detail="Kullanıcı adı veya şifre hatalı."
+        )
+
+    token = create_access_token({
+
+        "sub": str(kullanici.kullanici_id),
+
+        "username": kullanici.kullanici_adi
+
+    })
+
+    return {
+
+        "access_token": token,
+
+        "token_type": "bearer"
+
+    }
+
+@app.get(
+    "/cagri-listesi",
+    response_model=list[schemas.CagriListeResponse]
+)
+def cagri_listesi(
+    db: Session = Depends(get_db)
+):
+
+    return crud.get_cagri_listesi(db)
+
+@app.get(
+    "/dashboard",
+    response_model=schemas.DashboardResponse
+)
+def dashboard(db: Session = Depends(get_db)):
+    return crud.get_dashboard(db)

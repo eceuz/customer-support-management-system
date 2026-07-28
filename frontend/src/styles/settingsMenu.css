@@ -1,0 +1,79 @@
+.settings-menu{
+
+    width:240px;
+
+    background:#fff;
+
+    border-radius:16px;
+
+    border:1px solid #e5e7eb;
+
+    padding:20px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+    box-shadow:0 8px 24px rgba(15,23,42,.05);
+
+}
+
+.settings-menu h3{
+
+    margin:0 0 10px;
+
+    color:#1f2937;
+
+    font-size:22px;
+
+    font-weight:700;
+
+}
+
+.settings-menu button{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    border:none;
+
+    background:transparent;
+
+    padding:12px 14px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+    color:#374151;
+
+    transition:.2s;
+
+}
+
+.settings-menu button svg{
+
+    font-size:22px;
+
+}
+
+.settings-menu button:hover{
+
+    background:#f3f4f6;
+
+}
+
+.settings-menu button.active{
+
+    background:#2563eb;
+
+    color:white;
+
+}

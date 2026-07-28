@@ -1,0 +1,175 @@
+/* ===========================
+   Call Form
+=========================== */
+
+.call-form {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    padding: 28px;
+    box-sizing: border-box;
+
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+}
+
+/* ===========================
+   Başlık
+=========================== */
+
+.form-title {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #1f2937;
+    margin-bottom: 28px !important;
+}
+
+/* ===========================
+   Bölümler
+=========================== */
+
+.form-section {
+    margin-bottom: 30px;
+}
+
+.section-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 18px !important;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* ===========================
+   TextField
+=========================== */
+
+.call-form .MuiTextField-root {
+    width: 100%;
+}
+
+.call-form .MuiOutlinedInput-root {
+
+    border-radius: 12px;
+
+    background: #fff;
+
+    transition: all .2s ease;
+}
+
+.call-form .MuiOutlinedInput-root:hover {
+
+    background: #fafafa;
+}
+
+.call-form .MuiOutlinedInput-root.Mui-focused {
+
+    background: white;
+}
+
+.call-form .MuiInputLabel-root {
+
+    font-size: 14px;
+}
+
+/* ===========================
+   Autocomplete
+=========================== */
+
+.call-form .MuiAutocomplete-root{
+
+    width:100%;
+}
+
+/* ===========================
+   Alert
+=========================== */
+
+.call-form .MuiAlert-root{
+
+    margin-top:18px;
+
+    border-radius:12px;
+
+    font-size:14px;
+}
+
+/* ===========================
+   Yapılan İşlem
+=========================== */
+
+.call-form textarea{
+
+    line-height:1.6;
+
+    font-size:14px;
+}
+
+/* ===========================
+   Button
+=========================== */
+
+.button-area{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    margin-top:28px;
+}
+
+.save-button{
+
+    width:190px;
+
+    height:48px;
+
+    border-radius:12px !important;
+
+    font-size:15px !important;
+
+    font-weight:600 !important;
+
+    text-transform:none !important;
+
+    box-shadow:none !important;
+}
+
+.save-button:hover{
+
+    box-shadow:none !important;
+}
+
+/* ===========================
+   Grid
+=========================== */
+
+.call-form .MuiGrid-container{
+
+    margin-top:2px;
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media(max-width:900px){
+
+    .call-form{
+
+        padding:20px;
+    }
+
+    .button-area{
+
+        justify-content:stretch;
+    }
+
+    .save-button{
+
+        width:100%;
+    }
+
+}
