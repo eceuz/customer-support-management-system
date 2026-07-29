@@ -3,6 +3,9 @@ import { useState } from "react";
 import Header from "../components/Header";
 import "../styles/settings.css";
 import Musteriler from "../components/Musteriler";
+import Subeler from "../components/Subeler";
+import Kullanicilar from "../components/Kullanicilar";
+import ArizaTipleri from "../components/ArizaTipleri";
 
 import PeopleIcon from "@mui/icons-material/People";
 import StoreIcon from "@mui/icons-material/Store";
@@ -101,23 +104,11 @@ function Ayarlar() {
 
                     {activeModule==="musteriler" && <Musteriler />}
 
-                    {activeModule==="subeler" && (
-                        <>
-                            <h2>Şube Ayarları</h2>
-                        </>
-                    )}
+                    {activeModule === "subeler" && <Subeler />}
 
-                    {activeModule==="arizalar" && (
-                        <>
-                            <h2>Arıza Tipi Ayarları</h2>
-                        </>
-                    )}
+                    {activeModule === "arizalar" && <ArizaTipleri />}
 
-                    {activeModule==="kullanicilar" && (
-                        <>
-                            <h2>Kullanıcı Yönetimi</h2>
-                        </>
-                    )}
+                    {activeModule==="kullanicilar" && <Kullanicilar />} 
 
                 </div>
 

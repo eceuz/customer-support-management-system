@@ -14,7 +14,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -139,3 +139,94 @@ def cagri_listesi(
 )
 def dashboard(db: Session = Depends(get_db)):
     return crud.get_dashboard(db)
+
+@app.put(
+    "/musteriler/{musteri_id}",
+    response_model=schemas.MusteriResponse
+)
+def musteri_guncelle(
+    musteri_id: int,
+    musteri: schemas.MusteriUpdate,
+    db: Session = Depends(get_db)
+):
+
+    sonuc = crud.update_musteri(
+        db,
+        musteri_id,
+        musteri
+    )
+
+    if sonuc is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Müşteri bulunamadı."
+        )
+
+    return sonuc
+
+@app.delete("/musteriler/{musteri_id}")
+def musteri_sil(
+    musteri_id: int,
+    db: Session = Depends(get_db)
+):
+
+    sonuc = crud.delete_musteri(
+        db,
+        musteri_id
+    )
+
+    if sonuc is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Müşteri bulunamadı."
+        )
+
+    return {
+        "message": "Müşteri silindi."
+    }
+
+@app.put("/subeler/{sube_id}", response_model=schemas.SubeResponse)
+def sube_guncelle(
+    sube_id: int,
+    sube: schemas.SubeCreate,
+    db: Session = Depends(get_db)
+):
+    return crud.update_sube(db, sube_id, sube)
+
+
+@app.delete("/subeler/{sube_id}")
+def sube_sil(
+    sube_id: int,
+    db: Session = Depends(get_db)
+):
+    return crud.delete_sube(db, sube_id)
+
+@app.put("/kullanicilar/{kullanici_id}", response_model=schemas.KullaniciResponse)
+def kullanici_guncelle(
+    kullanici_id: int,
+    kullanici: schemas.KullaniciCreate,
+    db: Session = Depends(get_db)
+):
+    return crud.update_kullanici(db, kullanici_id, kullanici)
+
+@app.delete("/kullanicilar/{kullanici_id}")
+def kullanici_sil(
+    kullanici_id: int,
+    db: Session = Depends(get_db)
+):
+    return crud.delete_kullanici(db, kullanici_id)
+
+@app.put("/ariza-tipleri/{ariza_tipi_id}", response_model=schemas.ArizaTipiResponse)
+def ariza_tipi_guncelle(
+    ariza_tipi_id: int,
+    ariza_tipi: schemas.ArizaTipiCreate,
+    db: Session = Depends(get_db)
+):
+    return crud.update_ariza_tipi(db, ariza_tipi_id, ariza_tipi)    
+
+@app.delete("/ariza-tipleri/{ariza_tipi_id}")
+def ariza_tipi_sil(     
+    ariza_tipi_id: int,
+    db: Session = Depends(get_db)
+):
+    return crud.delete_ariza_tipi(db, ariza_tipi_id)    

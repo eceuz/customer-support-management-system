@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   Paper,
   Typography,
@@ -14,23 +15,29 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import MusteriDialog from "./MusteriDialog";
-import {
-  getMusteriler,
-  createMusteri,
-  updateMusteri,
-  deleteMusteri,
-} from "../api/musteriService";
 
-function Musteriler() {
-  const [musteriler, setMusteriler] = useState([]);
+import ArizaTipiDialog from "./ArizaTipiDialog";
+
+import {
+  getArizaTipleri,
+  createArizaTipi,
+  updateArizaTipi,
+  deleteArizaTipi,
+} from "../api/arizaService";
+
+function ArizaTipleri() {
+
+  const [arizaTipleri, setArizaTipleri] = useState([]);
   const [arama, setArama] = useState("");
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState("create");
-  const [selectedMusteri, setSelectedMusteri] = useState(null);
+  const [selectedArizaTipi, setSelectedArizaTipi] = useState(null);
+
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -38,96 +45,139 @@ function Musteriler() {
   });
 
   useEffect(() => {
-    loadMusteriler();
+    loadArizaTipleri();
   }, []);
 
-  const loadMusteriler = async () => {
+  const loadArizaTipleri = async () => {
+
     try {
-      const response = await getMusteriler();
-      setMusteriler(response.data);
+
+      const response = await getArizaTipleri();
+
+      setArizaTipleri(response.data);
+
     } catch (error) {
+
       console.error(error);
+
     }
+
   };
 
   const handleYeni = () => {
+
     setDialogMode("create");
-    setSelectedMusteri(null);
+    setSelectedArizaTipi(null);
     setDialogOpen(true);
+
   };
 
-  const handleEdit = (musteri) => {
+  const handleEdit = (arizaTipi) => {
+
     setDialogMode("edit");
-    setSelectedMusteri(musteri);
+    setSelectedArizaTipi(arizaTipi);
     setDialogOpen(true);
+
   };
 
-  const handleDeleteClick = (musteri) => {
+  const handleDeleteClick = (arizaTipi) => {
+
     setDialogMode("delete");
-    setSelectedMusteri(musteri);
+    setSelectedArizaTipi(arizaTipi);
     setDialogOpen(true);
+
   };
 
   const handleClose = () => {
+
     setDialogOpen(false);
-    setSelectedMusteri(null);
+    setSelectedArizaTipi(null);
+
   };
 
-  const handleSave = async (musteri) => {
+  const handleSave = async (arizaTipi) => {
+
     try {
+
       if (dialogMode === "create") {
-        await createMusteri(musteri);
+
+        await createArizaTipi(arizaTipi);
+
         setSnackbar({
           open: true,
-          message: "Müşteri eklendi.",
+          message: "Arıza tipi eklendi.",
           severity: "success",
         });
+
       } else {
-        await updateMusteri(selectedMusteri.musteri_id, musteri);
+
+        await updateArizaTipi(
+          selectedArizaTipi.ariza_tipi_id,
+          arizaTipi
+        );
+
         setSnackbar({
           open: true,
-          message: "Müşteri güncellendi.",
+          message: "Arıza tipi güncellendi.",
           severity: "success",
         });
+
       }
+
       handleClose();
-      loadMusteriler();
+      loadArizaTipleri();
+
     } catch {
+
       setSnackbar({
         open: true,
         message: "İşlem başarısız.",
         severity: "error",
       });
+
     }
+
   };
 
   const handleDelete = async () => {
+
     try {
-      await deleteMusteri(selectedMusteri.musteri_id);
+
+      await deleteArizaTipi(
+        selectedArizaTipi.ariza_tipi_id
+      );
+
       setSnackbar({
         open: true,
-        message: "Müşteri silindi.",
+        message: "Arıza tipi silindi.",
         severity: "success",
       });
+
       handleClose();
-      loadMusteriler();
+      loadArizaTipleri();
+
     } catch {
+
       setSnackbar({
         open: true,
-        message: "Bu müşteriye bağlı şubeler bulunduğu için silinemiyor.",
+        message: "Bu arıza tipi kullanıldığı için silinemiyor.",
         severity: "error",
       });
+
     }
+
   };
 
-  // Arama filtresi sadece Müşteri Kodu ve Müşteri Adı için çalışacak şekilde güncellendi
-  const filtreliMusteriler = musteriler.filter((musteri) =>
-    (musteri.cari_kodu || "").toString().toLowerCase().includes(arama.toLowerCase()) ||
-    (musteri.musteri_adi || "").toLowerCase().includes(arama.toLowerCase())
+  const filtreliArizaTipleri = arizaTipleri.filter((tip) =>
+    (tip.ariza_tipi_adi || "")
+      .toLowerCase()
+      .includes(arama.toLowerCase())
   );
 
-  return (
+    return (
+
     <Paper elevation={0} sx={{ p: 3, borderRadius: 4 }}>
+
       <div
         style={{
           display: "flex",
@@ -136,73 +186,154 @@ function Musteriler() {
           marginBottom: 20,
         }}
       >
-        <Typography variant="h5">Müşteri Ayarları</Typography>
+
+        <Typography variant="h5">
+
+          Arıza Tipi Ayarları
+
+        </Typography>
+
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleYeni}
         >
-          Yeni Müşteri
+
+          Yeni Arıza Tipi
+
         </Button>
+
       </div>
 
       <TextField
         fullWidth
         size="small"
-        placeholder="Ara..."
+        placeholder="Arıza tipi ara..."
         value={arama}
         onChange={(e) => setArama(e.target.value)}
         sx={{ mb: 3 }}
       />
 
       <TableContainer>
+
         <Table>
+
           <TableHead>
+
             <TableRow>
-              <TableCell>Müşteri Kodu</TableCell>
-              <TableCell>Müşteri Adı</TableCell>
-              <TableCell align="center">İşlemler</TableCell>
+
+              <TableCell>
+
+                Arıza Tipi
+
+              </TableCell>
+
+              <TableCell align="center">
+
+                İşlemler
+
+              </TableCell>
+
             </TableRow>
+
           </TableHead>
+
           <TableBody>
-            {filtreliMusteriler.map((musteri) => (
-              <TableRow key={musteri.musteri_id} hover>
-                <TableCell>{musteri.cari_kodu}</TableCell>
-                <TableCell>{musteri.musteri_adi}</TableCell>
-                <TableCell align="center">
-                  <IconButton color="primary" onClick={() => handleEdit(musteri)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton color="error" onClick={() => handleDeleteClick(musteri)}>
-                    <DeleteIcon />
-                  </IconButton>
+
+            {filtreliArizaTipleri.map((tip) => (
+
+              <TableRow
+                key={tip.ariza_tipi_id}
+                hover
+              >
+
+                <TableCell>
+
+                  {tip.ariza_tipi_adi}
+
                 </TableCell>
+
+                <TableCell align="center">
+
+                  <IconButton
+                    color="primary"
+                    onClick={() => handleEdit(tip)}
+                  >
+
+                    <EditIcon />
+
+                  </IconButton>
+
+                  <IconButton
+                    color="error"
+                    onClick={() => handleDeleteClick(tip)}
+                  >
+
+                    <DeleteIcon />
+
+                  </IconButton>
+
+                </TableCell>
+
               </TableRow>
+
             ))}
+
           </TableBody>
+
         </Table>
+
       </TableContainer>
 
-      <MusteriDialog
+      <ArizaTipiDialog
+
         open={dialogOpen}
+
         mode={dialogMode}
-        selectedMusteri={selectedMusteri}
+
+        selectedArizaTipi={selectedArizaTipi}
+
         onClose={handleClose}
+
         onSave={handleSave}
+
         onDelete={handleDelete}
+
       />
 
       <Snackbar
+
         open={snackbar.open}
+
         autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+
+        onClose={() =>
+          setSnackbar({
+            ...snackbar,
+            open: false,
+          })
+        }
+
       >
-        <Alert severity={snackbar.severity} variant="filled">
+
+        <Alert
+
+          severity={snackbar.severity}
+
+          variant="filled"
+
+        >
+
           {snackbar.message}
+
         </Alert>
+
       </Snackbar>
+
     </Paper>
+
   );
+
 }
 
-export default Musteriler;
+export default ArizaTipleri;

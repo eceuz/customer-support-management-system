@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   Paper,
   Typography,
@@ -14,23 +15,29 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import MusteriDialog from "./MusteriDialog";
-import {
-  getMusteriler,
-  createMusteri,
-  updateMusteri,
-  deleteMusteri,
-} from "../api/musteriService";
 
-function Musteriler() {
-  const [musteriler, setMusteriler] = useState([]);
+import KullaniciDialog from "./KullaniciDialog";
+
+import {
+  getKullanicilar,
+  createKullanici,
+  updateKullanici,
+  deleteKullanici,
+} from "../api/kullaniciService";
+
+function Kullanicilar() {
+
+  const [kullanicilar, setKullanicilar] = useState([]);
   const [arama, setArama] = useState("");
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState("create");
-  const [selectedMusteri, setSelectedMusteri] = useState(null);
+  const [selectedKullanici, setSelectedKullanici] = useState(null);
+
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -38,96 +45,136 @@ function Musteriler() {
   });
 
   useEffect(() => {
-    loadMusteriler();
+    loadKullanicilar();
   }, []);
 
-  const loadMusteriler = async () => {
+  const loadKullanicilar = async () => {
+
     try {
-      const response = await getMusteriler();
-      setMusteriler(response.data);
+
+      const response = await getKullanicilar();
+
+      setKullanicilar(response.data);
+
     } catch (error) {
+
       console.error(error);
+
     }
+
   };
 
   const handleYeni = () => {
+
     setDialogMode("create");
-    setSelectedMusteri(null);
+    setSelectedKullanici(null);
     setDialogOpen(true);
+
   };
 
-  const handleEdit = (musteri) => {
+  const handleEdit = (kullanici) => {
+
     setDialogMode("edit");
-    setSelectedMusteri(musteri);
+    setSelectedKullanici(kullanici);
     setDialogOpen(true);
+
   };
 
-  const handleDeleteClick = (musteri) => {
+  const handleDeleteClick = (kullanici) => {
+
     setDialogMode("delete");
-    setSelectedMusteri(musteri);
+    setSelectedKullanici(kullanici);
     setDialogOpen(true);
+
   };
 
   const handleClose = () => {
+
     setDialogOpen(false);
-    setSelectedMusteri(null);
+    setSelectedKullanici(null);
+
   };
 
-  const handleSave = async (musteri) => {
+  const handleSave = async (kullanici) => {
+
     try {
+
       if (dialogMode === "create") {
-        await createMusteri(musteri);
+
+        await createKullanici(kullanici);
+
         setSnackbar({
           open: true,
-          message: "Müşteri eklendi.",
+          message: "Kullanıcı eklendi.",
           severity: "success",
         });
+
       } else {
-        await updateMusteri(selectedMusteri.musteri_id, musteri);
+
+        await updateKullanici(
+          selectedKullanici.kullanici_id,
+          kullanici
+        );
+
         setSnackbar({
           open: true,
-          message: "Müşteri güncellendi.",
+          message: "Kullanıcı güncellendi.",
           severity: "success",
         });
+
       }
+
       handleClose();
-      loadMusteriler();
+      loadKullanicilar();
+
     } catch {
+
       setSnackbar({
         open: true,
         message: "İşlem başarısız.",
         severity: "error",
       });
+
     }
+
   };
 
   const handleDelete = async () => {
+
     try {
-      await deleteMusteri(selectedMusteri.musteri_id);
+
+      await deleteKullanici(selectedKullanici.kullanici_id);
+
       setSnackbar({
         open: true,
-        message: "Müşteri silindi.",
+        message: "Kullanıcı silindi.",
         severity: "success",
       });
+
       handleClose();
-      loadMusteriler();
+      loadKullanicilar();
+
     } catch {
+
       setSnackbar({
         open: true,
-        message: "Bu müşteriye bağlı şubeler bulunduğu için silinemiyor.",
+        message: "Kullanıcı silinemedi.",
         severity: "error",
       });
+
     }
+
   };
 
-  // Arama filtresi sadece Müşteri Kodu ve Müşteri Adı için çalışacak şekilde güncellendi
-  const filtreliMusteriler = musteriler.filter((musteri) =>
-    (musteri.cari_kodu || "").toString().toLowerCase().includes(arama.toLowerCase()) ||
-    (musteri.musteri_adi || "").toLowerCase().includes(arama.toLowerCase())
+  const filtreliKullanicilar = kullanicilar.filter((kullanici) =>
+    (kullanici.kullanici_adi || "")
+      .toLowerCase()
+      .includes(arama.toLowerCase())
   );
+    return (
 
-  return (
     <Paper elevation={0} sx={{ p: 3, borderRadius: 4 }}>
+
       <div
         style={{
           display: "flex",
@@ -136,73 +183,154 @@ function Musteriler() {
           marginBottom: 20,
         }}
       >
-        <Typography variant="h5">Müşteri Ayarları</Typography>
+
+        <Typography variant="h5">
+
+          Kullanıcı Ayarları
+
+        </Typography>
+
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleYeni}
         >
-          Yeni Müşteri
+
+          Yeni Kullanıcı
+
         </Button>
+
       </div>
 
       <TextField
         fullWidth
         size="small"
-        placeholder="Ara..."
+        placeholder="Kullanıcı ara..."
         value={arama}
         onChange={(e) => setArama(e.target.value)}
         sx={{ mb: 3 }}
       />
 
       <TableContainer>
+
         <Table>
+
           <TableHead>
+
             <TableRow>
-              <TableCell>Müşteri Kodu</TableCell>
-              <TableCell>Müşteri Adı</TableCell>
-              <TableCell align="center">İşlemler</TableCell>
+
+              <TableCell>
+
+                Kullanıcı Adı
+
+              </TableCell>
+
+              <TableCell align="center">
+
+                İşlemler
+
+              </TableCell>
+
             </TableRow>
+
           </TableHead>
+
           <TableBody>
-            {filtreliMusteriler.map((musteri) => (
-              <TableRow key={musteri.musteri_id} hover>
-                <TableCell>{musteri.cari_kodu}</TableCell>
-                <TableCell>{musteri.musteri_adi}</TableCell>
-                <TableCell align="center">
-                  <IconButton color="primary" onClick={() => handleEdit(musteri)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton color="error" onClick={() => handleDeleteClick(musteri)}>
-                    <DeleteIcon />
-                  </IconButton>
+
+            {filtreliKullanicilar.map((kullanici) => (
+
+              <TableRow
+                key={kullanici.kullanici_id}
+                hover
+              >
+
+                <TableCell>
+
+                  {kullanici.kullanici_adi}
+
                 </TableCell>
+
+                <TableCell align="center">
+
+                  <IconButton
+                    color="primary"
+                    onClick={() => handleEdit(kullanici)}
+                  >
+
+                    <EditIcon />
+
+                  </IconButton>
+
+                  <IconButton
+                    color="error"
+                    onClick={() => handleDeleteClick(kullanici)}
+                  >
+
+                    <DeleteIcon />
+
+                  </IconButton>
+
+                </TableCell>
+
               </TableRow>
+
             ))}
+
           </TableBody>
+
         </Table>
+
       </TableContainer>
 
-      <MusteriDialog
+      <KullaniciDialog
+
         open={dialogOpen}
+
         mode={dialogMode}
-        selectedMusteri={selectedMusteri}
+
+        selectedKullanici={selectedKullanici}
+
         onClose={handleClose}
+
         onSave={handleSave}
+
         onDelete={handleDelete}
+
       />
 
       <Snackbar
+
         open={snackbar.open}
+
         autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+
+        onClose={() =>
+          setSnackbar({
+            ...snackbar,
+            open: false,
+          })
+        }
+
       >
-        <Alert severity={snackbar.severity} variant="filled">
+
+        <Alert
+
+          severity={snackbar.severity}
+
+          variant="filled"
+
+        >
+
           {snackbar.message}
+
         </Alert>
+
       </Snackbar>
+
     </Paper>
+
   );
+
 }
 
-export default Musteriler;
+export default Kullanicilar;

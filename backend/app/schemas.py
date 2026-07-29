@@ -1,14 +1,23 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
 class MusteriCreate(BaseModel):
-    cari_adi: str
+    cari_kodu: int
+    cari_adi:Optional[str] = None
+    musteri_adi: str | None = None
+
+class MusteriUpdate(BaseModel):
+    cari_kodu:Optional[int] = None
+    cari_adi:Optional[str] = None
     musteri_adi: str | None = None
 
 
 class MusteriResponse(BaseModel):
     musteri_id: int
-    cari_adi: str
+    cari_kodu: Optional[int] = None
+    cari_adi: Optional[str] = None
     musteri_adi: str | None = None
 
     class Config:
@@ -17,12 +26,14 @@ class MusteriResponse(BaseModel):
 class SubeCreate(BaseModel):
     musteri_id: int
     sube_adi: str
+    sube_kodu: Optional[int] = None
     bakim_anlasmasi_var_mi: bool = False
 
 
 class SubeResponse(BaseModel):
     sube_id: int
     musteri_id: int
+    sube_kodu: Optional[int] = None
     sube_adi: str
     bakim_anlasmasi_var_mi: bool
 
@@ -116,3 +127,4 @@ class DashboardResponse(BaseModel):
     bekleyen: int
     servise_aktarilan: int
     toplam_musteri: int
+

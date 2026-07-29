@@ -7,6 +7,7 @@ from sqlalchemy import func
 def create_musteri(db: Session, musteri: schemas.MusteriCreate):
 
     yeni_musteri = models.Musteriler(
+        cari_kodu=musteri.cari_kodu,
         cari_adi=musteri.cari_adi,
         musteri_adi=musteri.musteri_adi
     )
@@ -27,9 +28,8 @@ def create_sube(db: Session, sube: schemas.SubeCreate):
     yeni_sube = models.Subeler(
 
         musteri_id=sube.musteri_id,
-
         sube_adi=sube.sube_adi,
-
+        sube_kodu=sube.sube_kodu,
         bakim_anlasmasi_var_mi=sube.bakim_anlasmasi_var_mi
 
     )
@@ -230,3 +230,172 @@ def get_dashboard(db: Session):
         "servise_aktarilan": servise_aktarilan,
         "toplam_musteri": toplam_musteri
     }
+
+def update_musteri(
+    db: Session,
+    musteri_id: int,
+    musteri: schemas.MusteriUpdate
+):
+
+    db_musteri = db.query(models.Musteriler).filter(
+        models.Musteriler.musteri_id == musteri_id
+    ).first()
+
+    if not db_musteri:
+        return None
+
+    db_musteri.cari_adi = musteri.cari_adi
+    db_musteri.musteri_adi = musteri.musteri_adi
+    db_musteri.cari_kodu = musteri.cari_kodu
+
+
+    db.commit()
+    db.refresh(db_musteri)
+
+    return db_musteri
+
+def delete_musteri(
+    db: Session,
+    musteri_id: int
+):
+
+    db_musteri = db.query(models.Musteriler).filter(
+        models.Musteriler.musteri_id == musteri_id
+    ).first()
+
+    if not db_musteri:
+        return None
+
+    db.delete(db_musteri)
+
+    db.commit()
+
+    return db_musteri
+
+def update_sube(
+    db: Session,
+    sube_id: int,
+    sube: schemas.SubeCreate
+):
+
+    mevcut_sube = (
+        db.query(models.Subeler)
+        .filter(models.Subeler.sube_id == sube_id)
+        .first()
+    )
+
+    if not mevcut_sube:
+        return None
+
+    mevcut_sube.musteri_id = sube.musteri_id
+    mevcut_sube.sube_adi = sube.sube_adi
+    mevcut_sube.sube_kodu = sube.sube_kodu  
+    mevcut_sube.bakim_anlasmasi_var_mi = sube.bakim_anlasmasi_var_mi
+
+    db.commit()
+    db.refresh(mevcut_sube)
+
+    return mevcut_sube
+
+
+def delete_sube(
+    db: Session,
+    sube_id: int
+):
+
+    sube = (
+        db.query(models.Subeler)
+        .filter(models.Subeler.sube_id == sube_id)
+        .first()
+    )
+
+    if not sube:
+        return None
+
+    db.delete(sube)
+    db.commit()
+
+    return {"message": "Şube silindi"}
+
+def update_kullanici(
+    db: Session,
+    kullanici_id: int,
+    kullanici: schemas.KullaniciCreate
+):
+
+    mevcut_kullanici = (
+        db.query(models.Kullanicilar)
+        .filter(models.Kullanicilar.kullanici_id == kullanici_id)
+        .first()
+    )
+
+    if not mevcut_kullanici:
+        return None
+
+    mevcut_kullanici.kullanici_adi = kullanici.kullanici_adi
+    mevcut_kullanici.sifre = kullanici.sifre
+
+    db.commit()
+    db.refresh(mevcut_kullanici)
+
+    return mevcut_kullanici
+
+def delete_kullanici(
+    db: Session,
+    kullanici_id: int
+):
+
+    kullanici = (
+        db.query(models.Kullanicilar)
+        .filter(models.Kullanicilar.kullanici_id == kullanici_id)
+        .first()
+    )
+
+    if not kullanici:
+        return None
+
+    db.delete(kullanici)
+    db.commit()
+
+    return {"message": "Kullanıcı silindi"}
+
+def update_ariza_tipi(
+    db: Session,
+    ariza_tipi_id: int,
+    ariza_tipi: schemas.ArizaTipiCreate
+):
+
+    mevcut_ariza_tipi = (
+        db.query(models.ArizaTipleri)
+        .filter(models.ArizaTipleri.ariza_tipi_id == ariza_tipi_id)
+        .first()
+    )
+
+    if not mevcut_ariza_tipi:
+        return None
+
+    mevcut_ariza_tipi.ariza_tipi_adi = ariza_tipi.ariza_tipi_adi
+
+    db.commit()
+    db.refresh(mevcut_ariza_tipi)
+
+    return mevcut_ariza_tipi
+
+def delete_ariza_tipi(
+    db: Session,
+    ariza_tipi_id: int
+):
+
+    ariza_tipi = (
+        db.query(models.ArizaTipleri)
+        .filter(models.ArizaTipleri.ariza_tipi_id == ariza_tipi_id)
+        .first()
+    )
+
+    if not ariza_tipi:
+        return None
+
+    db.delete(ariza_tipi)
+    db.commit()
+
+    return {"message": "Arıza tipi silindi"}    

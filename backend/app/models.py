@@ -9,6 +9,7 @@ class Musteriler(Base):
     musteri_id = Column(Integer, primary_key=True, index=True)
     cari_adi = Column(String(150), nullable=False)
     musteri_adi = Column(String(150), nullable=True)
+    cari_kodu = Column(Integer, unique=True, nullable=False)
 
     # Relationship
     subeler = relationship("Subeler", back_populates="musteri")
@@ -20,6 +21,7 @@ class Subeler(Base):
     sube_id = Column(Integer, primary_key=True, index=True)
     musteri_id = Column(Integer, ForeignKey("MUSTERILER.musteri_id"), nullable=False)
     sube_adi = Column(String(100), nullable=False)
+    sube_kodu = Column(Integer, nullable=True)
     bakim_anlasmasi_var_mi = Column(Boolean, default=False)
 
     # Relationships
