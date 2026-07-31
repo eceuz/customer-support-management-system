@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timedelta
 from .database import Base
 
 class Musteriler(Base):
@@ -50,6 +50,9 @@ class ArizaTipleri(Base):
     cagri_kayitlari = relationship("CagriKayitlari", back_populates="ariza_tipi")
 
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 class CagriKayitlari(Base):
     __tablename__ = "CAGRI_KAYITLARI"
 
@@ -61,7 +64,10 @@ class CagriKayitlari(Base):
     gorusulen_kisi = Column(String(100), nullable=True)
     yapilanlar = Column(Text, nullable=True)
     sonuc = Column(String(50), nullable=True)
-    tarih = Column(DateTime, default=datetime.utcnow)
+    tarih = Column(
+        DateTime,
+        default=lambda: datetime.utcnow() + timedelta(hours=3)
+    )
     cozum_saati = Column(DateTime, nullable=True)
 
     # Relationships

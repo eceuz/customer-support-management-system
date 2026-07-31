@@ -159,7 +159,11 @@ def get_cagri_listesi(db: Session):
 
             models.ArizaTipleri.ariza_tipi_adi.label("ariza_tipi_adi"),
 
-            models.Kullanicilar.kullanici_adi.label("kullanici_adi")
+            models.ArizaTipleri.ariza_tipi_adi.label("ariza_tipi_adi"),
+
+            models.Kullanicilar.kullanici_adi.label("kullanici_adi"),
+
+            models.Subeler.bakim_anlasmasi_var_mi.label("bakim_anlasmasi_var_mi")
 
         )
 

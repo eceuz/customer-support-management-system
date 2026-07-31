@@ -85,6 +85,8 @@ class CagriResponse(BaseModel):
     yapilanlar: str | None
     sonuc: str | None
     tarih: datetime
+    bakim_anlasmasi_var_mi: bool
+
 
     class Config:
         from_attributes = True
@@ -122,9 +124,24 @@ class CagriListeResponse(BaseModel):
 
     kullanici_adi: str
 
+    bakim_anlasmasi_var_mi: bool 
+
 class DashboardResponse(BaseModel):
     bugun_acilan: int
     bekleyen: int
     servise_aktarilan: int
     toplam_musteri: int
+
+from datetime import datetime
+
+class RaporResponse(BaseModel):
+    cagri_kayit_id: int
+    tarih: datetime
+    cari_adi: str
+    sube_adi: str
+    ariza_tipi_adi: str
+    kullanici_adi: str
+
+    class Config:
+        from_attributes = True
 

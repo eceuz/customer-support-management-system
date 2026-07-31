@@ -87,7 +87,7 @@ def cagri_kaydi_olustur(
 
 @app.get("/cagri-kayitlari", response_model=list[schemas.CagriResponse])
 def cagri_kayitlari_getir(db: Session = Depends(get_db)):
-    return crud.get_cagri_kayitlari(db)
+    return crud.get_cagri_listesi(db)
 
 @app.post("/login", response_model=schemas.TokenResponse)
 def login(
