@@ -1,5 +1,18 @@
 import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+
+import { deleteCagri } from "../api/cagriService";
+import { updateCagri } from "../api/cagriService"; 
 import {
   Chip,
   Paper,
@@ -17,13 +30,15 @@ import { useEffect, useState } from "react";
 import { getCagriListesi } from "../api/cagriService";
 import "../styles/callTable.css";
 
-function CallTable() {
+function CallTable({ setSelectedCall, refreshTable }) {
   const [rows, setRows] = useState([]);
   const [arama, setArama] = useState("");
+  const [openDelete, setOpenDelete] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
     loadCagrilar();
-  }, []);
+  }, [refreshTable]);
 
   const loadCagrilar = async () => {
     try {
@@ -31,6 +46,21 @@ function CallTable() {
       setRows(response.data);
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleDeleteClick = (id) => {
+    setSelectedId(id);
+    setOpenDelete(true);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteCagri(selectedId);
+      setOpenDelete(false);
+      loadCagrilar();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -103,6 +133,7 @@ function CallTable() {
               <TableCell width="22%">Yapılan İşlem</TableCell>
               <TableCell width="5%">Destek</TableCell>
               <TableCell width="15%">Durum</TableCell>
+              <TableCell width="6%">İşlem</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -183,13 +214,45 @@ function CallTable() {
                     size="small"
                   />
                 </TableCell>
+                
+                <TableCell>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
+                    <Tooltip title="Düzenle" arrow placement="left">
+                      <IconButton 
+                        color="primary" 
+                        size="small"
+                        onClick={() => setSelectedCall(row)}
+                        sx={{
+                          backgroundColor: "rgba(25, 118, 210, 0.04)",
+                          "&:hover": { backgroundColor: "rgba(25, 118, 210, 0.12)" }
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title="Sil" arrow placement="left">
+                      <IconButton 
+                        color="error" 
+                        size="small"
+                        onClick={() => handleDeleteClick(row.cagri_kaydi_id)}
+                        sx={{
+                          backgroundColor: "rgba(211, 47, 47, 0.04)",
+                          "&:hover": { backgroundColor: "rgba(211, 47, 47, 0.12)" }
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
 
             {filtreliKayitlar.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={9}
                   align="center"
                   sx={{ py: 6 }}
                 >
@@ -202,6 +265,30 @@ function CallTable() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Dialog
+        open={openDelete}
+        onClose={() => setOpenDelete(false)}
+      >
+        <DialogTitle>
+          Çağrı Kaydını Sil
+        </DialogTitle>
+        <DialogContent>
+          Bu çağrı kaydını silmek istediğinize emin misiniz?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDelete(false)}>
+            İptal
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleDelete}
+          >
+            Sil
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }

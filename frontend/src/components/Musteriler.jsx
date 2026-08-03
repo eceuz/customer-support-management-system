@@ -13,10 +13,13 @@ import {
   IconButton,
   Snackbar,
   Alert,
+  Tooltip,
+  InputAdornment,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SearchIcon from "@mui/icons-material/Search";
 import MusteriDialog from "./MusteriDialog";
 import {
   getMusteriler,
@@ -120,65 +123,141 @@ function Musteriler() {
     }
   };
 
-  // Arama filtresi sadece Müşteri Kodu ve Müşteri Adı için çalışacak şekilde güncellendi
   const filtreliMusteriler = musteriler.filter((musteri) =>
     (musteri.cari_kodu || "").toString().toLowerCase().includes(arama.toLowerCase()) ||
     (musteri.musteri_adi || "").toLowerCase().includes(arama.toLowerCase())
   );
 
   return (
-    <Paper elevation={0} sx={{ p: 3, borderRadius: 4 }}>
+    <Paper 
+      elevation={0} 
+      sx={{ 
+        p: 4, 
+        borderRadius: "16px", 
+        backgroundColor: "#ffffff",
+        border: "1px solid rgba(0, 0, 0, 0.06)",
+        boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.02)"
+      }}
+    >
+      {/* Üst Kısım / Başlık ve Ekle Butonu */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 20,
+          marginBottom: 24,
         }}
       >
-        <Typography variant="h5">Müşteri Ayarları</Typography>
+        <div>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#1e293b" }}>
+            Müşteri Ayarları
+          </Typography>
+          <Typography variant="body2" sx={{ color: "#64748b", mt: 0.5 }}>
+            Sistemdeki cari kayıtlarını buradan yönetebilirsiniz.
+          </Typography>
+        </div>
+
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleYeni}
+          sx={{
+            borderRadius: "10px",
+            textTransform: "none",
+            fontWeight: 600,
+            boxShadow: "none",
+            "&:hover": { boxShadow: "0px 4px 12px rgba(25, 118, 210, 0.2)" }
+          }}
         >
           Yeni Müşteri
         </Button>
       </div>
 
+      {/* Arama Çubuğu */}
       <TextField
         fullWidth
         size="small"
-        placeholder="Ara..."
+        placeholder="Müşteri Kodu veya Adı ile ara..."
         value={arama}
         onChange={(e) => setArama(e.target.value)}
-        sx={{ mb: 3 }}
+        sx={{ mb: 3, maxWidth: "400px" }}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" sx={{ color: "#94a3b8" }} />
+              </InputAdornment>
+            ),
+          },
+        }}
       />
 
+      {/* Tablo Alanı */}
       <TableContainer>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Müşteri Kodu</TableCell>
-              <TableCell>Müşteri Adı</TableCell>
-              <TableCell align="center">İşlemler</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#475569" }}>Müşteri Kodu</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "#475569" }}>Müşteri Adı</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 600, color: "#475569", width: "120px" }}>İşlemler</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filtreliMusteriler.map((musteri) => (
               <TableRow key={musteri.musteri_id} hover>
-                <TableCell>{musteri.cari_kodu}</TableCell>
-                <TableCell>{musteri.musteri_adi}</TableCell>
+                <TableCell sx={{ fontWeight: 500, color: "#334155" }}>
+                  {musteri.cari_kodu}
+                </TableCell>
+                <TableCell sx={{ color: "#1e293b", fontWeight: 500 }}>
+                  {musteri.musteri_adi}
+                </TableCell>
                 <TableCell align="center">
-                  <IconButton color="primary" onClick={() => handleEdit(musteri)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton color="error" onClick={() => handleDeleteClick(musteri)}>
-                    <DeleteIcon />
-                  </IconButton>
+                  <div style={{ display: "flex", justifyContent: "center", gap: "6px", alignItems: "center" }}>
+                    <Tooltip title="Düzenle" arrow>
+                      <IconButton 
+                        color="primary" 
+                        size="small"
+                        onClick={() => handleEdit(musteri)}
+                        sx={{
+                          backgroundColor: "rgba(25, 118, 210, 0.04)",
+                          "&:hover": { backgroundColor: "rgba(25, 118, 210, 0.12)" }
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title="Sil" arrow>
+                      <IconButton 
+                        color="error" 
+                        size="small"
+                        onClick={() => handleDeleteClick(musteri)}
+                        sx={{
+                          backgroundColor: "rgba(211, 47, 47, 0.04)",
+                          "&:hover": { backgroundColor: "rgba(211, 47, 47, 0.12)" }
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
+
+            {filtreliMusteriler.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={3}
+                  align="center"
+                  sx={{ py: 6 }}
+                >
+                  <Typography color="text.secondary">
+                    Kayıt bulunamadı.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>

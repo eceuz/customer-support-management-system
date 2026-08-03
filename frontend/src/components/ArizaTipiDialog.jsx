@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import {
   Dialog,
   DialogTitle,
@@ -18,142 +17,109 @@ function ArizaTipiDialog({
   onSave,
   onDelete,
 }) {
-
   const [arizaTipi, setArizaTipi] = useState("");
 
   useEffect(() => {
-
     if (selectedArizaTipi) {
-
       setArizaTipi(selectedArizaTipi.ariza_tipi_adi);
-
     } else {
-
       setArizaTipi("");
-
     }
-
   }, [selectedArizaTipi, open]);
 
   const handleSave = () => {
-
     onSave({
-
       ariza_tipi_adi: arizaTipi,
-
     });
-
   };
 
   return (
-
     <Dialog
       open={open}
       onClose={onClose}
       fullWidth
       maxWidth="sm"
+      PaperProps={{
+        sx: {
+          borderRadius: "16px",
+          p: 1,
+        }
+      }}
     >
-
-      <DialogTitle>
-
-        {mode === "create" && "Yeni Arıza Tipi"}
-
-        {mode === "edit" && "Arıza Tipi Düzenle"}
-
-        {mode === "delete" && "Arıza Tipi Sil"}
-
+      <DialogTitle sx={{ fontWeight: 700, color: "#1e293b" }}>
+        {mode === "create" && "Yeni Arıza Tipi Ekle"}
+        {mode === "edit" && "Arıza Tipini Düzenle"}
+        {mode === "delete" && "Arıza Tipini Sil"}
       </DialogTitle>
 
       {mode === "delete" ? (
-
         <>
-
           <DialogContent>
-
-            <Typography>
-
-              <b>{selectedArizaTipi?.ariza_tipi_adi}</b> arıza tipini silmek istediğinize emin misiniz?
-
+            <Typography sx={{ mt: 1, color: "#475569" }}>
+              <strong>{selectedArizaTipi?.ariza_tipi_adi}</strong> arıza tipini silmek istediğinize emin misiniz?
             </Typography>
-
           </DialogContent>
-
-          <DialogActions>
-
-            <Button onClick={onClose}>
-
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button 
+              onClick={onClose}
+              sx={{ color: "#64748b", textTransform: "none", fontWeight: 600 }}
+            >
               Vazgeç
-
             </Button>
-
             <Button
               color="error"
               variant="contained"
               onClick={onDelete}
+              sx={{
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+                boxShadow: "none",
+              }}
             >
-
-              Sil
-
+              Evet, Sil
             </Button>
-
           </DialogActions>
-
         </>
-
       ) : (
-
         <>
-
           <DialogContent>
-
             <TextField
-
-              label="Arıza Tipi"
-
+              label="Arıza Tipi Adı"
               fullWidth
-
               margin="normal"
-
+              size="small"
               value={arizaTipi}
-
               onChange={(e) =>
                 setArizaTipi(e.target.value)
               }
-
             />
-
           </DialogContent>
-
-          <DialogActions>
-
-            <Button onClick={onClose}>
-
-              Vazgeç
-
-            </Button>
-
-            <Button
-
-              variant="contained"
-
-              onClick={handleSave}
-
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button 
+              onClick={onClose}
+              sx={{ color: "#64748b", textTransform: "none", fontWeight: 600 }}
             >
-
-              Kaydet
-
+              Vazgeç
             </Button>
-
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              sx={{
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+                boxShadow: "none",
+              }}
+            >
+              {mode === "create" && "Kaydet"}
+              {mode === "edit" && "Güncellemeyi Kaydet"}
+            </Button>
           </DialogActions>
-
         </>
-
       )}
-
     </Dialog>
-
   );
-
 }
 
 export default ArizaTipiDialog;

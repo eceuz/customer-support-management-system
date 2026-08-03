@@ -11,3 +11,13 @@ export const getCagrilar = () => {
 export const getCagriListesi = () => {
     return api.get("/cagri-listesi");
 };
+
+// ÇAĞRI SİL
+export const deleteCagri = (id) => {
+    return api.delete(`/cagri-kayitlari/${id}`);
+};
+
+// ÇAĞRI GÜNCELLE
+export const updateCagri = (id, data) => {
+    return api.put(`/cagri-kayitlari/${id}`, data);
+};

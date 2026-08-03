@@ -77,12 +77,13 @@ def kullanicilari_getir(db: Session = Depends(get_db)):
     return crud.get_kullanicilar(db)
 
 
-@app.post("/cagri-kayitlari", response_model=schemas.CagriResponse)
+@app.post("/cagri-kayitlari")
 def cagri_kaydi_olustur(
     cagri: schemas.CagriCreate,
     db: Session = Depends(get_db)
 ):
-    return crud.create_cagri(db, cagri)
+    crud.create_cagri(db, cagri)
+    return {"message": "Kayıt başarıyla oluşturuldu"}
 
 
 @app.get("/cagri-kayitlari", response_model=list[schemas.CagriResponse])
@@ -230,3 +231,45 @@ def ariza_tipi_sil(
     db: Session = Depends(get_db)
 ):
     return crud.delete_ariza_tipi(db, ariza_tipi_id)    
+
+@app.put("/cagri-kayitlari/{cagri_id}")
+def update_cagri(
+    cagri_id: int,
+    cagri: schemas.CagriCreate,
+    db: Session = Depends(get_db)
+):
+
+    sonuc = crud.update_cagri(
+        db,
+        cagri_id,
+        cagri
+    )
+
+    if sonuc is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Çağrı bulunamadı."
+        )
+
+    return sonuc
+
+@app.delete("/cagri-kayitlari/{cagri_id}")
+def delete_cagri(
+    cagri_id: int,
+    db: Session = Depends(get_db)
+):
+
+    sonuc = crud.delete_cagri(
+        db,
+        cagri_id
+    )
+
+    if not sonuc:
+        raise HTTPException(
+            status_code=404,
+            detail="Çağrı bulunamadı."
+        )
+
+    return {
+        "message": "Çağrı kaydı silindi."
+    }

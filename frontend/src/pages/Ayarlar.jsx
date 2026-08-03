@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import Header from "../components/Header";
 import "../styles/settings.css";
 import Musteriler from "../components/Musteriler";
@@ -12,112 +11,101 @@ import StoreIcon from "@mui/icons-material/Store";
 import BuildIcon from "@mui/icons-material/Build";
 import PersonIcon from "@mui/icons-material/Person";
 
+import { Box, Paper, Typography } from "@mui/material";
+
 function Ayarlar() {
+  const [activeModule, setActiveModule] = useState("musteriler");
 
-    const [activeModule,setActiveModule]=useState("musteriler");
+  const menuItems = [
+    { id: "musteriler", label: "Müşteriler", desc: "Müşteri kayıtlarını yönetin", icon: <PeopleIcon /> },
+    { id: "subeler", label: "Şubeler", desc: "Şube kayıtlarını yönetin", icon: <StoreIcon /> },
+    { id: "arizalar", label: "Arıza Tipleri", desc: "Arıza tiplerini yönetin", icon: <BuildIcon /> },
+    { id: "kullanicilar", label: "Kullanıcılar", desc: "Kullanıcı hesaplarını yönetin", icon: <PersonIcon /> },
+  ];
 
-    return(
+  return (
+    <div className="dashboard">
+      <Header />
 
-        <div className="dashboard">
+      <main className="settings-page" style={{ display: "flex", gap: "24px", padding: "24px" }}>
+        
+        {/* Modernize Edilmiş Sol Menü (Sidebar) */}
+        <Paper 
+          elevation={0} 
+          className="settings-sidebar"
+          style={{ 
+            width: "300px", 
+            padding: "16px", 
+            borderRadius: "16px", 
+            height: "fit-content",
+            backgroundColor: "#ffffff",
+            border: "1px solid rgba(0, 0, 0, 0.06)"
+          }}
+        >
+          <Typography variant="h6" sx={{ mb: 2, px: 2, fontWeight: 700, color: "#1e293b" }}>
+            Yönetim
+          </Typography>
 
-            <Header/>
-
-            <main className="settings-page">
-
-                <div className="settings-sidebar">
-
-                    <h2 className="settings-title">
-                        Yönetim
-                    </h2>
-
-                    <div
-                        className={`settings-item ${activeModule==="musteriler" ? "active":""}`}
-                        onClick={()=>setActiveModule("musteriler")}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {menuItems.map((item) => {
+              const isActive = activeModule === item.id;
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => setActiveModule(item.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "14px",
+                    padding: "12px 16px",
+                    borderRadius: "12px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease-in-out",
+                    backgroundColor: isActive ? "rgba(25, 118, 210, 0.08)" : "transparent",
+                    color: isActive ? "#1976d2" : "#64748b",
+                    borderLeft: isActive ? "4px solid #1976d2" : "4px solid transparent",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.02)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  <span style={{ fontSize: "22px", display: "flex", alignItems: "center" }}>
+                    {item.icon}
+                  </span>
+                  <div>
+                    <Typography 
+                      variant="subtitle2" 
+                      style={{ fontWeight: isActive ? 700 : 600, lineHeight: 1.2, color: isActive ? "#1976d2" : "#334155" }}
                     >
-
-                        <PeopleIcon/>
-
-                        <div>
-
-                            <h3>Müşteriler</h3>
-
-                            <p>Müşteri kayıtlarını yönetin</p>
-
-                        </div>
-
-                    </div>
-
-                    <div
-                        className={`settings-item ${activeModule==="subeler" ? "active":""}`}
-                        onClick={()=>setActiveModule("subeler")}
+                      {item.label}
+                    </Typography>
+                    <Typography 
+                      variant="caption" 
+                      style={{ color: "#94a3b8", display: "block", marginTop: "2px" }}
                     >
-
-                        <StoreIcon/>
-
-                        <div>
-
-                            <h3>Şubeler</h3>
-
-                            <p>Şube kayıtlarını yönetin</p>
-
-                        </div>
-
-                    </div>
-
-                    <div
-                        className={`settings-item ${activeModule==="arizalar" ? "active":""}`}
-                        onClick={()=>setActiveModule("arizalar")}
-                    >
-
-                        <BuildIcon/>
-
-                        <div>
-
-                            <h3>Arıza Tipleri</h3>
-
-                            <p>Arıza tiplerini yönetin</p>
-
-                        </div>
-
-                    </div>
-
-                    <div
-                        className={`settings-item ${activeModule==="kullanicilar" ? "active":""}`}
-                        onClick={()=>setActiveModule("kullanicilar")}
-                    >
-
-                        <PersonIcon/>
-
-                        <div>
-
-                            <h3>Kullanıcılar</h3>
-
-                            <p>Kullanıcı hesaplarını yönetin</p>
-
-                        </div>
-
-                    </div>
-
+                      {item.desc}
+                    </Typography>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+        </Paper>
 
-                <div className="settings-content">
-
-                    {activeModule==="musteriler" && <Musteriler />}
-
-                    {activeModule === "subeler" && <Subeler />}
-
-                    {activeModule === "arizalar" && <ArizaTipleri />}
-
-                    {activeModule==="kullanicilar" && <Kullanicilar />} 
-
-                </div>
-
-            </main>
-
+        {/* İçerik Alanı */}
+        <div className="settings-content" style={{ flex: 1 }}>
+          {activeModule === "musteriler" && <Musteriler />}
+          {activeModule === "subeler" && <Subeler />}
+          {activeModule === "arizalar" && <ArizaTipleri />}
+          {activeModule === "kullanicilar" && <Kullanicilar />}
         </div>
 
-    );
-
+      </main>
+    </div>
+  );
 }
 
 export default Ayarlar;

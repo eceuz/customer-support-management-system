@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import {
   Dialog,
   DialogTitle,
@@ -18,165 +17,124 @@ function KullaniciDialog({
   onSave,
   onDelete,
 }) {
-
   const [kullaniciAdi, setKullaniciAdi] = useState("");
   const [sifre, setSifre] = useState("");
 
   useEffect(() => {
-
     if (selectedKullanici) {
-
       setKullaniciAdi(selectedKullanici.kullanici_adi);
       setSifre(selectedKullanici.sifre);
-
     } else {
-
       setKullaniciAdi("");
       setSifre("");
-
     }
-
   }, [selectedKullanici, open]);
 
   const handleSave = () => {
-
     onSave({
-
       kullanici_adi: kullaniciAdi,
-
       sifre: sifre,
-
     });
-
   };
 
   return (
-
     <Dialog
       open={open}
       onClose={onClose}
       fullWidth
       maxWidth="sm"
+      PaperProps={{
+        sx: {
+          borderRadius: "16px",
+          p: 1,
+        }
+      }}
     >
-
-      <DialogTitle>
-
-        {mode === "create" && "Yeni Kullanıcı"}
-
-        {mode === "edit" && "Kullanıcı Düzenle"}
-
-        {mode === "delete" && "Kullanıcı Sil"}
-
+      <DialogTitle sx={{ fontWeight: 700, color: "#1e293b" }}>
+        {mode === "create" && "Yeni Kullanıcı Ekle"}
+        {mode === "edit" && "Kullanıcı Bilgilerini Düzenle"}
+        {mode === "delete" && "Kullanıcıyı Sil"}
       </DialogTitle>
 
       {mode === "delete" ? (
-
         <>
-
           <DialogContent>
-
-            <Typography>
-
-              <b>{selectedKullanici?.kullanici_adi}</b> kullanıcısını silmek istediğinize emin misiniz?
-
+            <Typography sx={{ mt: 1, color: "#475569" }}>
+              <strong>{selectedKullanici?.kullanici_adi}</strong> kullanıcısını silmek istediğinize emin misiniz?
             </Typography>
-
           </DialogContent>
-
-          <DialogActions>
-
-            <Button onClick={onClose}>
-
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button 
+              onClick={onClose}
+              sx={{ color: "#64748b", textTransform: "none", fontWeight: 600 }}
+            >
               Vazgeç
-
             </Button>
-
             <Button
               color="error"
               variant="contained"
               onClick={onDelete}
+              sx={{
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+                boxShadow: "none",
+              }}
             >
-
-              Sil
-
+              Evet, Sil
             </Button>
-
           </DialogActions>
-
         </>
-
       ) : (
-
         <>
-
           <DialogContent>
-
             <TextField
-
               label="Kullanıcı Adı"
-
               fullWidth
-
               margin="normal"
-
+              size="small"
               value={kullaniciAdi}
-
               onChange={(e) =>
                 setKullaniciAdi(e.target.value)
               }
-
             />
-
             <TextField
-
               label="Şifre"
-
               type="password"
-
               fullWidth
-
               margin="normal"
-
+              size="small"
               value={sifre}
-
               onChange={(e) =>
                 setSifre(e.target.value)
               }
-
             />
-
           </DialogContent>
-
-          <DialogActions>
-
-            <Button onClick={onClose}>
-
-              Vazgeç
-
-            </Button>
-
-            <Button
-
-              variant="contained"
-
-              onClick={handleSave}
-
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button 
+              onClick={onClose}
+              sx={{ color: "#64748b", textTransform: "none", fontWeight: 600 }}
             >
-
-              Kaydet
-
+              Vazgeç
             </Button>
-
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              sx={{
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+                boxShadow: "none",
+              }}
+            >
+              {mode === "create" && "Kaydet"}
+              {mode === "edit" && "Güncellemeyi Kaydet"}
+            </Button>
           </DialogActions>
-
         </>
-
       )}
-
     </Dialog>
-
   );
-
 }
 
 export default KullaniciDialog;

@@ -73,6 +73,7 @@ class CagriCreate(BaseModel):
     gorusulen_kisi: str | None = None
     yapilanlar: str | None = None
     sonuc: str | None = None
+    tarih : datetime | None = None
 
 
 class CagriResponse(BaseModel):

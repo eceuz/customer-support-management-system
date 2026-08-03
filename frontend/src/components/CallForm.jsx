@@ -17,9 +17,13 @@ import { jwtDecode } from "jwt-decode";
 import { getMusteriler } from "../api/musteriService";
 import { getSubeler } from "../api/subeService";
 import { getArizaTipleri } from "../api/arizaService";
-import { createCagri } from "../api/cagriService";
+import { createCagri, updateCagri } from "../api/cagriService";
 
-function CallForm() {
+function CallForm({
+  selectedCall,
+  setSelectedCall,
+  refreshTable,
+}) {
   const [musteriler, setMusteriler] = useState([]);
   const [subeler, setSubeler] = useState([]);
   const [arizaTipleri, setArizaTipleri] = useState([]);
@@ -32,6 +36,20 @@ function CallForm() {
   const [gorusulenKisi, setGorusulenKisi] = useState("");
   const [yapilanlar, setYapilanlar] = useState("");
   const [sonuc, setSonuc] = useState("");
+
+  const getFormattedLocalDateTime = (dateString) => {
+    const date = dateString ? new Date(dateString) : new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const [tarih, setTarih] = useState(getFormattedLocalDateTime());
+
+  const [mesaj, setMesaj] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -49,9 +67,77 @@ function CallForm() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (!selectedCall) {
+      setMusteri(null);
+      setSube(null);
+      setArizaTipi(null);
+      setTelefon("");
+      setGorusulenKisi("");
+      setYapilanlar("");
+      setSonuc("");
+      setTarih(getFormattedLocalDateTime());
+      setSubeler([]);
+      setMesaj(null);
+      return;
+    }
+
+    setTelefon(selectedCall.telefon || "");
+    setGorusulenKisi(selectedCall.gorusulen_kisi || "");
+    setYapilanlar(selectedCall.yapilanlar || "");
+    setSonuc(selectedCall.sonuc || "");
+    setTarih(getFormattedLocalDateTime(selectedCall.tarih));
+
+    // Arıza tipini eşleştir
+    const seciliAriza = arizaTipleri.find(
+      (a) => a.ariza_tipi_adi === selectedCall.ariza_tipi_adi
+    );
+    if (seciliAriza) {
+      setArizaTipi(seciliAriza);
+    }
+
+    // Müşteri ve Şube bilgilerini eşleştirmek için önce müşteriyi bulup şubelerini çekiyoruz
+    if (selectedCall.musteri_adi && musteriler.length > 0) {
+      const seciliMusteri = musteriler.find(
+        (m) => m.musteri_adi === selectedCall.musteri_adi
+      );
+      
+      if (seciliMusteri) {
+        setMusteri(seciliMusteri);
+
+        // Şubeleri getir ve eşleşen şubeyi seç
+        getSubeler(seciliMusteri.musteri_id)
+          .then((res) => {
+            setSubeler(res.data);
+            const seciliSube = res.data.find(
+              (s) => s.sube_adi === selectedCall.sube_adi
+            );
+            if (seciliSube) {
+              setSube(seciliSube);
+            }
+          })
+          .catch((err) => console.error(err));
+      }
+    }
+  }, [selectedCall, musteriler, arizaTipleri]);
+
+  // Formu sıfırlama yardımcı fonksiyonu
+  const resetForm = () => {
+    setSelectedCall(null);
+    setMusteri(null);
+    setSube(null);
+    setArizaTipi(null);
+    setTelefon("");
+    setGorusulenKisi("");
+    setYapilanlar("");
+    setSonuc("");
+    setTarih(getFormattedLocalDateTime());
+    setSubeler([]);
+  };
+
   const handleSave = async () => {
     if (!musteri || !sube || !arizaTipi) {
-      alert("Lütfen tüm zorunlu alanları doldurun.");
+      setMesaj({ text: "Lütfen tüm zorunlu alanları doldurun.", severity: "error" });
       return;
     }
 
@@ -59,7 +145,14 @@ function CallForm() {
       const token = localStorage.getItem("token");
       const decoded = jwtDecode(token);
 
-      await createCagri({
+      // Yerel saat kaymasını (UTC hatasını) önleyen dönüşüm
+      const formatLocalDateTimeToISO = (dateStr) => {
+        const d = new Date(dateStr);
+        const tzOffset = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - tzOffset).toISOString();
+      };
+
+      const payload = {
         sube_id: sube.sube_id,
         kullanici_id: Number(decoded.sub),
         ariza_tipi_id: arizaTipi.ariza_tipi_id,
@@ -67,31 +160,69 @@ function CallForm() {
         gorusulen_kisi: gorusulenKisi,
         yapilanlar,
         sonuc,
-      });
+        // Sadece güncelleme modunda saat kayması olmadan tarihi gönderiyoruz
+        ...(selectedCall && { tarih: formatLocalDateTimeToISO(tarih) }),
+      };
 
-      alert("Kayıt başarıyla oluşturuldu.");
+      if (selectedCall) {
+        // GÜNCELLEME İŞLEMİ
+        await updateCagri(selectedCall.cagri_kaydi_id, payload);
+        setMesaj({ text: "Kayıt başarıyla güncellendi.", severity: "success" });
+      } else {
+        // YENİ KAYIT İŞLEMİ
+        await createCagri(payload);
+        setMesaj({ text: "Kayıt başarıyla oluşturuldu.", severity: "success" });
+      }
 
-      setMusteri(null);
-      setSube(null);
-      setArizaTipi(null);
-
-      setTelefon("");
-      setGorusulenKisi("");
-      setYapilanlar("");
-      setSonuc("");
-
-      setSubeler([]);
+      resetForm();
+      refreshTable(); // Tabloyu yenile
     } catch (error) {
       console.error(error);
-      alert("Kayıt oluşturulamadı.");
+      setMesaj({ 
+        text: selectedCall ? "Kayıt güncellenemedi." : "Kayıt oluşturulamadı.", 
+        severity: "error" 
+      });
     }
   };
 
   return (
     <Paper elevation={0} className="call-form">
       <Typography className="form-title" variant="h5">
-        📞 Yeni Destek Kaydı
+        {selectedCall ? "✏️ Çağrı Güncelle" : "📞 Yeni Destek Kaydı"}
       </Typography>
+
+      {/* Uygulama içi şık bildirim alanı */}
+      {mesaj && (
+        <Alert 
+          sx={{ mb: 2 }} 
+          severity={mesaj.severity}
+          onClose={() => setMesaj(null)}
+        >
+          {mesaj.text}
+        </Alert>
+      )}
+
+      {/* Tarih ve Saat Alanı - SADECE GÜNCELLEME EKRANINDA GÖRÜNÜR */}
+      {selectedCall && (
+        <div className="form-section" style={{ marginBottom: "15px" }}>
+          <TextField
+            fullWidth
+            size="small"
+            type="datetime-local"
+            label="Çağrı Tarihi ve Saati"
+            value={tarih}
+            onChange={(e) => setTarih(e.target.value)}
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+              input: {
+                sx: { color: "text.primary" },
+              },
+            }}
+          />
+        </div>
+      )}
 
       <div className="form-section">
         <Typography className="section-title">
@@ -116,12 +247,7 @@ function CallForm() {
 
             try {
               const response = await getSubeler(value.musteri_id);
-
-              console.log("Müşteri ID:", value.musteri_id);
-              console.log("Gelen şubeler:", response.data);
-
               setSubeler(response.data);
-              
             } catch (error) {
               console.error(error);
             }
@@ -166,7 +292,7 @@ function CallForm() {
         </Typography>
 
         <Grid container spacing={2}>
-          <Grid xs={6}>
+          <Grid size={{ xs: 6 }}>
             <TextField
               fullWidth
               label="Telefon"
@@ -175,7 +301,7 @@ function CallForm() {
             />
           </Grid>
 
-          <Grid xs={6}>
+          <Grid size={{ xs: 6 }}>
             <TextField
               fullWidth
               label="Görüşülen Kişi"
@@ -227,14 +353,26 @@ function CallForm() {
           </MenuItem>
         </TextField>
 
-        <div className="button-area">
+        <div className="button-area" style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
           <Button
             variant="contained"
             className="save-button"
+            color={selectedCall ? "warning" : "primary"}
             onClick={handleSave}
+            fullWidth
           >
-            Kaydı Kaydet
+            {selectedCall ? "Güncellemeyi Kaydet" : "Kaydı Kaydet"}
           </Button>
+
+          {selectedCall && (
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={resetForm}
+            >
+              İptal
+            </Button>
+          )}
         </div>
       </div>
     </Paper>

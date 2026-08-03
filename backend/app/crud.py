@@ -93,29 +93,19 @@ def get_kullanicilar(db: Session):
     return db.query(models.Kullanicilar).all()
 
 def create_cagri(db: Session, cagri: schemas.CagriCreate):
-
     yeni = models.CagriKayitlari(
-
         sube_id=cagri.sube_id,
-
         kullanici_id=cagri.kullanici_id,
-
         ariza_tipi_id=cagri.ariza_tipi_id,
-
         telefon=cagri.telefon,
-
         gorusulen_kisi=cagri.gorusulen_kisi,
-
         yapilanlar=cagri.yapilanlar,
-
         sonuc=cagri.sonuc
-
     )
 
     db.add(yeni)
     db.commit()
     db.refresh(yeni)
-
     return yeni
 
 
@@ -402,4 +392,51 @@ def delete_ariza_tipi(
     db.delete(ariza_tipi)
     db.commit()
 
-    return {"message": "Arıza tipi silindi"}    
+    return {"message": "Arıza tipi silindi"}   
+
+def update_cagri(
+    db: Session,
+    cagri_id: int,
+    cagri: schemas.CagriCreate
+):
+    db_cagri = (
+        db.query(models.CagriKayitlari)
+        .filter(models.CagriKayitlari.cagri_kaydi_id == cagri_id)
+        .first()
+    )
+
+    if not db_cagri:
+        return None
+
+    db_cagri.sube_id = cagri.sube_id
+    db_cagri.kullanici_id = cagri.kullanici_id
+    db_cagri.ariza_tipi_id = cagri.ariza_tipi_id
+    db_cagri.telefon = cagri.telefon
+    db_cagri.gorusulen_kisi = cagri.gorusulen_kisi
+    db_cagri.yapilanlar = cagri.yapilanlar
+    db_cagri.sonuc = cagri.sonuc
+    db_cagri.tarih = cagri.tarih
+
+    db.commit()
+    db.refresh(db_cagri)
+
+    return db_cagri
+
+def delete_cagri(
+    db: Session,
+    cagri_id: int
+):
+
+    db_cagri = (
+        db.query(models.CagriKayitlari)
+        .filter(models.CagriKayitlari.cagri_kaydi_id == cagri_id)
+        .first()
+    )
+
+    if not db_cagri:
+        return False
+
+    db.delete(db_cagri)
+    db.commit()
+
+    return True 
