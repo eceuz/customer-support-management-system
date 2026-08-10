@@ -21,3 +21,6 @@ export const deleteCagri = (id) => {
 export const updateCagri = (id, data) => {
     return api.put(`/cagri-kayitlari/${id}`, data);
 };
+export const getSon24SaatCagriListesi = async () => {
+  return api.get("/cagri-listesi/son-24-saat");
+};

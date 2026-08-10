@@ -273,3 +273,12 @@ def delete_cagri(
     return {
         "message": "Çağrı kaydı silindi."
     }
+
+@app.get(
+    "/cagri-listesi/son-24-saat",
+    response_model=list[schemas.CagriListeResponse]
+)
+def son_24_saat_cagri_listesi(
+    db: Session = Depends(get_db)
+):
+    return crud.get_son_24_saat_cagrilari(db)

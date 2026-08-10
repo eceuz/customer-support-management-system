@@ -282,7 +282,7 @@ function Reports() {
                 <MenuItem value="Müşteri Dönüş Bekleniyor">
                   Müşteri Dönüş Bekleniyor
                 </MenuItem>
-                <MenuItem value="Çözülemedi">Çözülemedi</MenuItem>
+                <MenuItem value="Servise Aktarıldı">Servise Aktarıldı</MenuItem>
               </TextField>
             </Grid>
 

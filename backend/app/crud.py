@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
-from datetime import date
+from datetime import date, timedelta, datetime
 from sqlalchemy import func
+from zoneinfo import ZoneInfo
 
 
 def create_musteri(db: Session, musteri: schemas.MusteriCreate):
@@ -440,3 +441,64 @@ def delete_cagri(
     db.commit()
 
     return True 
+
+def get_son_24_saat_cagrilari(db: Session):
+
+    yirmi_dort_saat_once = datetime.now() - timedelta(hours=24)
+
+    sonuc = (
+        db.query(
+            models.CagriKayitlari.cagri_kaydi_id,
+            models.CagriKayitlari.tarih,
+            models.CagriKayitlari.telefon,
+            models.CagriKayitlari.gorusulen_kisi,
+            models.CagriKayitlari.yapilanlar,
+            models.CagriKayitlari.sonuc,
+
+            models.Musteriler.musteri_adi.label("musteri_adi"),
+
+            models.Subeler.sube_adi.label("sube_adi"),
+
+            models.ArizaTipleri.ariza_tipi_adi.label("ariza_tipi_adi"),
+
+            models.Kullanicilar.kullanici_adi.label("kullanici_adi"),
+
+            models.Subeler.bakim_anlasmasi_var_mi.label(
+                "bakim_anlasmasi_var_mi"
+            )
+        )
+
+        .join(
+            models.Subeler,
+            models.CagriKayitlari.sube_id == models.Subeler.sube_id
+        )
+
+        .join(
+            models.Musteriler,
+            models.Subeler.musteri_id == models.Musteriler.musteri_id
+        )
+
+        .join(
+            models.ArizaTipleri,
+            models.CagriKayitlari.ariza_tipi_id
+            == models.ArizaTipleri.ariza_tipi_id
+        )
+
+        .join(
+            models.Kullanicilar,
+            models.CagriKayitlari.kullanici_id
+            == models.Kullanicilar.kullanici_id
+        )
+
+        .filter(
+            models.CagriKayitlari.tarih >= yirmi_dort_saat_once
+        )
+
+        .order_by(
+            models.CagriKayitlari.tarih.desc()
+        )
+
+        .all()
+    )
+
+    return sonuc
