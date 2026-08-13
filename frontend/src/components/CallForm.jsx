@@ -98,10 +98,9 @@ function CallForm({
 
     // Müşteri ve Şube bilgilerini eşleştirmek için önce müşteriyi bulup şubelerini çekiyoruz
     if (selectedCall.musteri_adi && musteriler.length > 0) {
-      const seciliMusteri = musteriler.find(
-        (m) => m.musteri_adi === selectedCall.musteri_adi
-      );
-      
+     const seciliMusteri = musteriler.find(
+  (m) => m.musteri_id === selectedCall.musteri_id
+);
       if (seciliMusteri) {
         setMusteri(seciliMusteri);
 
@@ -230,32 +229,37 @@ function CallForm({
         </Typography>
 
         <Autocomplete
-          options={musteriler}
-          value={musteri}
-          getOptionLabel={(option) => option.musteri_adi || ""}
-          isOptionEqualToValue={(option, value) =>
-            option.musteri_id === value.musteri_id
-          }
-          onChange={async (e, value) => {
-            setMusteri(value);
-            setSube(null);
+  options={musteriler}
+  value={musteri}
+  getOptionLabel={(option) => option.musteri_adi || ""}
+  isOptionEqualToValue={(option, value) =>
+    option.musteri_id === value.musteri_id
+  }
+  renderOption={(props, option) => (
+    <li {...props} key={option.musteri_id}>
+      {option.musteri_adi}
+    </li>
+  )}
+  onChange={async (e, value) => {
+    setMusteri(value);
+    setSube(null);
 
-            if (!value) {
-              setSubeler([]);
-              return;
-            }
+    if (!value) {
+      setSubeler([]);
+      return;
+    }
 
-            try {
-              const response = await getSubeler(value.musteri_id);
-              setSubeler(response.data);
-            } catch (error) {
-              console.error(error);
-            }
-          }}
-          renderInput={(params) => (
-            <TextField {...params} label="Müşteri Ara" />
-          )}
-        />
+    try {
+      const response = await getSubeler(value.musteri_id);
+      setSubeler(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  }}
+  renderInput={(params) => (
+    <TextField {...params} label="Müşteri Ara" />
+  )}
+/>
 
         <Autocomplete
           sx={{ mt: 2 }}

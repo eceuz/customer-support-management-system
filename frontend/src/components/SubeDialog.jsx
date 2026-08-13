@@ -101,30 +101,34 @@ function SubeDialog({
         <>
           <DialogContent>
             <Autocomplete
-              options={musteriler}
-              getOptionLabel={(option) => option.musteri_adi || ""}
-              isOptionEqualToValue={(option, value) =>
-                option.musteri_id === value.musteri_id
-              }
-              value={
-                musteriler.find(
-                  (m) => m.musteri_id === musteriId
-                ) || null
-              }
-              onChange={(event, value) => {
-                setMusteriId(value ? value.musteri_id : "");
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Cari Seçin"
-                  margin="normal"
-                  size="small"
-                  fullWidth
-                />
-              )}
-            />
-
+  options={musteriler}
+  getOptionLabel={(option) => option.musteri_adi || ""}
+  isOptionEqualToValue={(option, value) =>
+    option.musteri_id === value.musteri_id
+  }
+  value={
+    musteriler.find(
+      (m) => m.musteri_id === musteriId
+    ) || null
+  }
+  onChange={(event, value) => {
+    setMusteriId(value ? value.musteri_id : "");
+  }}
+  renderOption={(props, option) => (
+    <li {...props} key={option.musteri_id}>
+      {option.musteri_adi}
+    </li>
+  )}
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Cari Seçin"
+      margin="normal"
+      size="small"
+      fullWidth
+    />
+  )}
+/>
             <TextField
               label="Şube Kodu"
               fullWidth
