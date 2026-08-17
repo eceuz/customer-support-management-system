@@ -20,7 +20,7 @@ import {
 import FilterListIcon from "@mui/icons-material/FilterList";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import axios from "axios";
+import api from "../api/api";
 import "../styles/raporlar.css";
 
 function Reports() {
@@ -43,7 +43,7 @@ function Reports() {
 
   const veriYukle = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/cagri-listesi");
+      const response = await api.get("/cagri-listesi");
       setCagrilar(response.data);
       setFiltrelenmisCagrilar(response.data);
     } catch (error) {
