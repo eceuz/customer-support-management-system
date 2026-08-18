@@ -1,105 +1,207 @@
 import { useEffect, useState } from "react";
 import "../styles/statisticsCards.css";
 
-import { getDashboard } from "../api/dashboardService";
+import { getSon24SaatCagriListesi } from "../api/cagriService";
 
-function StatisticsCards() {
+
+function StatisticsCards({
+    onCardClick,
+    activeFilter,
+    refreshTrigger
+}) {
 
     const [cards, setCards] = useState([
 
         {
             title: "Bugün",
-            value: 0
+            value: 0,
+            filter: "bugun"
         },
 
         {
             title: "Bekleyen",
-            value: 0
+            value: 0,
+            filter: "bekleyen"
         },
 
         {
             title: "Servise Aktarılan",
-            value: 0
+            value: 0,
+            filter: "servise_aktarilan"
         },
 
         {
-            title: "Toplam Müşteri",
-            value: 0
+            title: "Çözülen",
+            value: 0,
+            filter: "cozuldu"
         }
 
     ]);
 
+
     useEffect(() => {
 
-        const loadDashboard = async () => {
+        const loadStatistics = async () => {
 
             try {
 
-                const response = await getDashboard();
+                const response =
+                    await getSon24SaatCagriListesi();
+
+                const cagrilar =
+                    response.data || [];
+
+
+                // BUGÜN
+                const bugun = new Date();
+
+                const bugunSayisi =
+                    cagrilar.filter((item) => {
+
+                        if (!item.tarih) {
+                            return false;
+                        }
+
+                        const tarih =
+                            new Date(item.tarih);
+
+                        return (
+                            tarih.getFullYear() ===
+                                bugun.getFullYear() &&
+
+                            tarih.getMonth() ===
+                                bugun.getMonth() &&
+
+                            tarih.getDate() ===
+                                bugun.getDate()
+                        );
+
+                    }).length;
+
+
+                // BEKLEYEN
+                const bekleyenSayisi =
+                    cagrilar.filter(
+                        (item) =>
+                            item.sonuc ===
+                            "Beklemede"
+                    ).length;
+
+
+                // SERVİSE AKTARILAN
+                const serviseAktarilanSayisi =
+                    cagrilar.filter(
+                        (item) =>
+                            item.sonuc ===
+                            "Servise Aktarıldı"
+                    ).length;
+
+
+                // ÇÖZÜLEN
+                const cozulenSayisi =
+                    cagrilar.filter(
+                        (item) =>
+                            item.sonuc ===
+                            "Çözüldü"
+                    ).length;
+
 
                 setCards([
 
                     {
                         title: "Bugün",
-                        value: response.data.bugun_acilan
+                        value: bugunSayisi,
+                        filter: "bugun"
                     },
 
                     {
                         title: "Bekleyen",
-                        value: response.data.bekleyen
+                        value: bekleyenSayisi,
+                        filter: "bekleyen"
                     },
 
                     {
                         title: "Servise Aktarılan",
-                        value: response.data.servise_aktarilan
+                        value:
+                            serviseAktarilanSayisi,
+                        filter:
+                            "servise_aktarilan"
                     },
 
                     {
-                        title: "Toplam Müşteri",
-                        value: response.data.toplam_musteri
+                        title: "Çözülen",
+                        value: cozulenSayisi,
+                        filter: "cozuldu"
                     }
 
                 ]);
 
             } catch (error) {
 
-                console.error("Dashboard verileri alınamadı:", error);
+                console.error(
+                    "İstatistikler alınamadı:",
+                    error
+                );
 
             }
 
         };
 
-        loadDashboard();
 
-    }, []);
+        loadStatistics();
+
+    }, [refreshTrigger]);
+
+
+    const handleCardClick = (filter) => {
+
+        if (onCardClick) {
+            onCardClick(filter);
+        }
+
+    };
+
 
     return (
 
         <div className="statistics">
 
-            {
+            {cards.map((card) => (
 
-                cards.map((card, index) => (
+                <div
+                    className={`stat-card ${
+                        activeFilter === card.filter
+                            ? "active"
+                            : ""
+                    }`}
+                    key={card.filter}
+                    onClick={() =>
+                        handleCardClick(
+                            card.filter
+                        )
+                    }
+                    style={{
+                        cursor: "pointer"
+                    }}
+                >
 
-                    <div
-                        className="stat-card"
-                        key={index}
-                    >
+                    <span>
+                        {card.title}
+                    </span>
 
-                        <span>{card.title}</span>
+                    <h2>
+                        {card.value}
+                    </h2>
 
-                        <h2>{card.value}</h2>
+                </div>
 
-                    </div>
-
-                ))
-
-            }
+            ))}
 
         </div>
 
     );
 
 }
+
 
 export default StatisticsCards;

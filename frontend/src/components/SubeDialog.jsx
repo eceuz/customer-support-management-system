@@ -161,7 +161,7 @@ function SubeDialog({
               }
               label={
                 <Typography sx={{ fontSize: "0.95rem", color: "#334155", fontWeight: 500 }}>
-                  Bakım Anlaşması Var
+                  Telefon Destek Anlaşması Var
                 </Typography>
               }
             />

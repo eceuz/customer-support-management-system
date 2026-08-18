@@ -24,3 +24,7 @@ export const updateCagri = (id, data) => {
 export const getSon24SaatCagriListesi = async () => {
   return api.get("/cagri-listesi/son-24-saat");
 };
+
+export const getSonucSecenekleri = () => {
+    return api.get("/sonuc-secenekleri");
+};

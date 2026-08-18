@@ -54,14 +54,18 @@ class ArizaTipiResponse(BaseModel):
 class KullaniciCreate(BaseModel):
     kullanici_adi: str
     sifre: str
+    rol: str = "DESTEK"
 
+class KullaniciUpdate(BaseModel):
+    kullanici_adi: str
+    sifre: str | None = None
+    rol: str
 
 class KullaniciResponse(BaseModel):
     kullanici_id: int
     kullanici_adi: str
+    rol: str
 
-    class Config:
-        from_attributes = True
 
 from datetime import datetime
 

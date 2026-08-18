@@ -75,11 +75,9 @@ def get_ariza_tipleri(db: Session):
 def create_kullanici(db: Session, kullanici: schemas.KullaniciCreate):
 
     yeni = models.Kullanicilar(
-
         kullanici_adi=kullanici.kullanici_adi,
-
-        sifre=kullanici.sifre
-
+        sifre=kullanici.sifre,
+        rol=kullanici.rol
     )
 
     db.add(yeni)
@@ -315,7 +313,7 @@ def delete_sube(
 def update_kullanici(
     db: Session,
     kullanici_id: int,
-    kullanici: schemas.KullaniciCreate
+    kullanici: schemas.KullaniciUpdate
 ):
 
     mevcut_kullanici = (
@@ -328,7 +326,9 @@ def update_kullanici(
         return None
 
     mevcut_kullanici.kullanici_adi = kullanici.kullanici_adi
-    mevcut_kullanici.sifre = kullanici.sifre
+    if kullanici.sifre:
+        mevcut_kullanici.sifre = kullanici.sifre
+    mevcut_kullanici.rol = kullanici.rol
 
     db.commit()
     db.refresh(mevcut_kullanici)
@@ -410,7 +410,6 @@ def update_cagri(
         return None
 
     db_cagri.sube_id = cagri.sube_id
-    db_cagri.kullanici_id = cagri.kullanici_id
     db_cagri.ariza_tipi_id = cagri.ariza_tipi_id
     db_cagri.telefon = cagri.telefon
     db_cagri.gorusulen_kisi = cagri.gorusulen_kisi

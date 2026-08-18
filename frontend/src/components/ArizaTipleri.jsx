@@ -32,6 +32,9 @@ import {
   deleteArizaTipi,
 } from "../api/arizaService";
 
+import { canModify } from "../api/authService";
+
+
 function ArizaTipleri() {
   const [arizaTipleri, setArizaTipleri] = useState([]);
   const [arama, setArama] = useState("");
@@ -46,9 +49,20 @@ function ArizaTipleri() {
     severity: "success",
   });
 
+
   useEffect(() => {
     loadArizaTipleri();
   }, []);
+
+
+  const yetkiUyarisiGoster = () => {
+    setSnackbar({
+      open: true,
+      message: "Bu işlemi yapmaya yetkili değilsiniz.",
+      severity: "warning",
+    });
+  };
+
 
   const loadArizaTipleri = async () => {
     try {
@@ -56,36 +70,63 @@ function ArizaTipleri() {
       setArizaTipleri(response.data);
     } catch (error) {
       console.error(error);
+
+      setSnackbar({
+        open: true,
+        message: "Arıza tipi bilgileri alınamadı.",
+        severity: "error",
+      });
     }
   };
 
+
   const handleYeni = () => {
+    if (!canModify()) {
+      yetkiUyarisiGoster();
+      return;
+    }
+
     setDialogMode("create");
     setSelectedArizaTipi(null);
     setDialogOpen(true);
   };
 
+
   const handleEdit = (arizaTipi) => {
+    if (!canModify()) {
+      yetkiUyarisiGoster();
+      return;
+    }
+
     setDialogMode("edit");
     setSelectedArizaTipi(arizaTipi);
     setDialogOpen(true);
   };
 
+
   const handleDeleteClick = (arizaTipi) => {
+    if (!canModify()) {
+      yetkiUyarisiGoster();
+      return;
+    }
+
     setDialogMode("delete");
     setSelectedArizaTipi(arizaTipi);
     setDialogOpen(true);
   };
+
 
   const handleClose = () => {
     setDialogOpen(false);
     setSelectedArizaTipi(null);
   };
 
+
   const handleSave = async (arizaTipi) => {
     try {
       if (dialogMode === "create") {
         await createArizaTipi(arizaTipi);
+
         setSnackbar({
           open: true,
           message: "Arıza tipi eklendi.",
@@ -96,6 +137,7 @@ function ArizaTipleri() {
           selectedArizaTipi.ariza_tipi_id,
           arizaTipi
         );
+
         setSnackbar({
           open: true,
           message: "Arıza tipi güncellendi.",
@@ -105,20 +147,31 @@ function ArizaTipleri() {
 
       handleClose();
       loadArizaTipleri();
-    } catch {
-      setSnackbar({
-        open: true,
-        message: "İşlem başarısız.",
-        severity: "error",
-      });
+
+    } catch (error) {
+      if (error.response?.status === 403) {
+        setSnackbar({
+          open: true,
+          message: "Bu işlemi yapmaya yetkili değilsiniz.",
+          severity: "warning",
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: "İşlem başarısız.",
+          severity: "error",
+        });
+      }
     }
   };
+
 
   const handleDelete = async () => {
     try {
       await deleteArizaTipi(
         selectedArizaTipi.ariza_tipi_id
       );
+
       setSnackbar({
         open: true,
         message: "Arıza tipi silindi.",
@@ -127,14 +180,24 @@ function ArizaTipleri() {
 
       handleClose();
       loadArizaTipleri();
-    } catch {
-      setSnackbar({
-        open: true,
-        message: "Bu arıza tipi kullanıldığı için silinemiyor.",
-        severity: "error",
-      });
+
+    } catch (error) {
+      if (error.response?.status === 403) {
+        setSnackbar({
+          open: true,
+          message: "Bu işlemi yapmaya yetkili değilsiniz.",
+          severity: "warning",
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: "Bu arıza tipi kullanıldığı için silinemiyor.",
+          severity: "error",
+        });
+      }
     }
   };
+
 
   const filtreliArizaTipleri = arizaTipleri.filter((tip) =>
     (tip.ariza_tipi_adi || "")
@@ -142,18 +205,19 @@ function ArizaTipleri() {
       .includes(arama.toLowerCase())
   );
 
+
   return (
-    <Paper 
-      elevation={0} 
-      sx={{ 
-        p: 4, 
-        borderRadius: "16px", 
+    <Paper
+      elevation={0}
+      sx={{
+        p: 4,
+        borderRadius: "16px",
         backgroundColor: "#ffffff",
         border: "1px solid rgba(0, 0, 0, 0.06)",
-        boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.02)"
+        boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.02)",
       }}
     >
-      {/* Üst Kısım / Başlık ve Ekle Butonu */}
+      {/* Üst Kısım */}
       <div
         style={{
           display: "flex",
@@ -163,11 +227,25 @@ function ArizaTipleri() {
         }}
       >
         <div>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: "#1e293b" }}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              color: "#1e293b",
+            }}
+          >
             Arıza Tipi Ayarları
           </Typography>
-          <Typography variant="body2" sx={{ color: "#64748b", mt: 0.5 }}>
-            Sistemde yer alan arıza ve destek türlerini buradan yönetebilirsiniz.
+
+          <Typography
+            variant="body2"
+            sx={{
+              color: "#64748b",
+              mt: 0.5,
+            }}
+          >
+            Sistemde yer alan arıza ve destek türlerini buradan
+            yönetebilirsiniz.
           </Typography>
         </div>
 
@@ -180,12 +258,16 @@ function ArizaTipleri() {
             textTransform: "none",
             fontWeight: 600,
             boxShadow: "none",
-            "&:hover": { boxShadow: "0px 4px 12px rgba(25, 118, 210, 0.2)" }
+            "&:hover": {
+              boxShadow:
+                "0px 4px 12px rgba(25, 118, 210, 0.2)",
+            },
           }}
         >
           Yeni Arıza Tipi
         </Button>
       </div>
+
 
       {/* Arama Çubuğu */}
       <TextField
@@ -193,61 +275,123 @@ function ArizaTipleri() {
         size="small"
         placeholder="Arıza tipi ara..."
         value={arama}
-        onChange={(e) => setArama(e.target.value)}
-        sx={{ mb: 3, maxWidth: "400px" }}
+        onChange={(e) =>
+          setArama(e.target.value)
+        }
+        sx={{
+          mb: 3,
+          maxWidth: "400px",
+        }}
         slotProps={{
           input: {
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon fontSize="small" sx={{ color: "#94a3b8" }} />
+                <SearchIcon
+                  fontSize="small"
+                  sx={{
+                    color: "#94a3b8",
+                  }}
+                />
               </InputAdornment>
             ),
           },
         }}
       />
 
-      {/* Tablo Alanı */}
+
+      {/* Tablo */}
       <TableContainer>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600, color: "#475569" }}>Arıza Tipi</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 600, color: "#475569", width: "120px" }}>İşlemler</TableCell>
+              <TableCell
+                sx={{
+                  fontWeight: 600,
+                  color: "#475569",
+                }}
+              >
+                Arıza Tipi
+              </TableCell>
+
+              <TableCell
+                align="center"
+                sx={{
+                  fontWeight: 600,
+                  color: "#475569",
+                  width: "120px",
+                }}
+              >
+                İşlemler
+              </TableCell>
             </TableRow>
           </TableHead>
+
+
           <TableBody>
             {filtreliArizaTipleri.map((tip) => (
               <TableRow
                 key={tip.ariza_tipi_id}
                 hover
               >
-                <TableCell sx={{ color: "#1e293b", fontWeight: 500 }}>
+                <TableCell
+                  sx={{
+                    color: "#1e293b",
+                    fontWeight: 500,
+                  }}
+                >
                   {tip.ariza_tipi_adi}
                 </TableCell>
+
                 <TableCell align="center">
-                  <div style={{ display: "flex", justifyContent: "center", gap: "6px", alignItems: "center" }}>
-                    <Tooltip title="Düzenle" arrow>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: "6px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Tooltip
+                      title="Düzenle"
+                      arrow
+                    >
                       <IconButton
                         color="primary"
                         size="small"
-                        onClick={() => handleEdit(tip)}
+                        onClick={() =>
+                          handleEdit(tip)
+                        }
                         sx={{
-                          backgroundColor: "rgba(25, 118, 210, 0.04)",
-                          "&:hover": { backgroundColor: "rgba(25, 118, 210, 0.12)" }
+                          backgroundColor:
+                            "rgba(25, 118, 210, 0.04)",
+                          "&:hover": {
+                            backgroundColor:
+                              "rgba(25, 118, 210, 0.12)",
+                          },
                         }}
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
 
-                    <Tooltip title="Sil" arrow>
+
+                    <Tooltip
+                      title="Sil"
+                      arrow
+                    >
                       <IconButton
                         color="error"
                         size="small"
-                        onClick={() => handleDeleteClick(tip)}
+                        onClick={() =>
+                          handleDeleteClick(tip)
+                        }
                         sx={{
-                          backgroundColor: "rgba(211, 47, 47, 0.04)",
-                          "&:hover": { backgroundColor: "rgba(211, 47, 47, 0.12)" }
+                          backgroundColor:
+                            "rgba(211, 47, 47, 0.04)",
+                          "&:hover": {
+                            backgroundColor:
+                              "rgba(211, 47, 47, 0.12)",
+                          },
                         }}
                       >
                         <DeleteIcon fontSize="small" />
@@ -258,12 +402,15 @@ function ArizaTipleri() {
               </TableRow>
             ))}
 
+
             {filtreliArizaTipleri.length === 0 && (
               <TableRow>
                 <TableCell
                   colSpan={2}
                   align="center"
-                  sx={{ py: 6 }}
+                  sx={{
+                    py: 6,
+                  }}
                 >
                   <Typography color="text.secondary">
                     Kayıt bulunamadı.
@@ -275,6 +422,7 @@ function ArizaTipleri() {
         </Table>
       </TableContainer>
 
+
       <ArizaTipiDialog
         open={dialogOpen}
         mode={dialogMode}
@@ -283,6 +431,7 @@ function ArizaTipleri() {
         onSave={handleSave}
         onDelete={handleDelete}
       />
+
 
       <Snackbar
         open={snackbar.open}

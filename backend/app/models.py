@@ -35,6 +35,7 @@ class Kullanicilar(Base):
     kullanici_id = Column(Integer, primary_key=True, index=True)
     kullanici_adi = Column(String(100), nullable=False)
     sifre = Column(String(255), nullable=False)
+    rol = Column(String(20), nullable=False)
 
     # Relationship
     cagri_kayitlari = relationship("CagriKayitlari", back_populates="kullanici")
