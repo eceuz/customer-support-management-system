@@ -443,7 +443,9 @@ def delete_cagri(
 
 def get_son_24_saat_cagrilari(db: Session):
 
-    yirmi_dort_saat_once = datetime.now() - timedelta(hours=24)
+    yirmi_dort_saat_once = (
+        datetime.utcnow() + timedelta(hours=3)
+    ) - timedelta(hours=24)
 
     sonuc = (
         db.query(
