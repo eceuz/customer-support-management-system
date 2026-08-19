@@ -22,6 +22,7 @@ const bosForm = {
   baslangic_tarihi: "",
   bitis_tarihi: "",
   kayitli_tel_no: "",
+  resmi_unvan:"",
 };
 
 
@@ -87,6 +88,10 @@ function YazarKasaDialog({
 
         kayitli_tel_no:
           selectedYazarkasa.kayitli_tel_no || "",
+        
+        resmi_unvan:
+          selectedYazarkasa.resmi_unvan || "",
+          
 
       });
 
@@ -296,6 +301,8 @@ function YazarKasaDialog({
 
       kayitli_tel_no:
         form.kayitli_tel_no.trim() || null,
+      resmi_unvan:
+        form.resmi_unvan.trim() || null,
 
     });
 
@@ -557,6 +564,18 @@ function YazarKasaDialog({
             )}
 
           </TextField>
+        
+                 {/* =================================================
+              RESMİ ÜNVAN
+          ================================================= */}
+
+          <TextField
+  label="Resmi Ünvan"
+  name="resmi_unvan"
+  value={form.resmi_unvan}
+  onChange={handleChange}
+  fullWidth
+/>
 
 
           {/* =================================================

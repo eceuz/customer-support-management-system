@@ -16,6 +16,7 @@ import {
   Alert,
   Tooltip,
   InputAdornment,
+  Tab,
 } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
@@ -491,6 +492,8 @@ function Yazarkasalar() {
 
           item.marka,
 
+          item.resmi_unvan,
+
           item.sicil_no,
 
           item.kayitli_tel_no,
@@ -529,6 +532,11 @@ function Yazarkasalar() {
       elevation={0}
       sx={{
         p: 4,
+        width: "100%",
+        maxWidth: "100%",
+        minWidth: 0,
+        boxSizing: "border-box",
+        overflow: "hidden",
         borderRadius: "16px",
         backgroundColor: "#ffffff",
         border:
@@ -548,6 +556,7 @@ function Yazarkasalar() {
           justifyContent:
             "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
           marginBottom: "24px",
           gap: "16px",
         }}
@@ -596,6 +605,7 @@ function Yazarkasalar() {
               textTransform: "none",
               fontWeight: 600,
               boxShadow: "none",
+              flexShrink: 0,
 
               "&:hover": {
                 boxShadow:
@@ -640,7 +650,7 @@ function Yazarkasalar() {
       <TextField
         fullWidth
         size="small"
-        placeholder="Müşteri, şube, marka, sicil no veya telefon ara..."
+        placeholder="Müşteri, şube, resmi ünvan, marka, sicil no veya telefon ara..."
         value={arama}
         onChange={(e) =>
           setArama(
@@ -680,9 +690,23 @@ function Yazarkasalar() {
           TABLO
       ====================================================== */}
 
-      <TableContainer>
+      <TableContainer
+        sx={{
+          width: "100%",
+          maxWidth: "100%",
+          overflowX: "auto",
+          overflowY: "hidden",
+          WebkitOverflowScrolling: "touch",
+          borderRadius: "10px",
+        }}
+      >
 
-        <Table>
+        <Table
+          sx={{
+            minWidth: "1180px",
+            width: "100%",
+          }}
+        >
 
           <TableHead>
 
@@ -705,6 +729,18 @@ function Yazarkasalar() {
                 }}
               >
                 Şube
+              </TableCell>
+
+
+              <TableCell
+                sx={{
+                  fontWeight: 600,
+                  color: "#475569",
+                  minWidth: "220px",
+                  width: "260px",
+                }}
+              >
+                Resmi Ünvan
               </TableCell>
 
 
@@ -815,6 +851,25 @@ function Yazarkasalar() {
                     {getSubeAdi(
                       item.sube_id
                     )}
+                  </TableCell>
+
+
+                  {/* RESMİ ÜNVAN */}
+
+                  <TableCell
+                    sx={{
+                      color: "#475569",
+                      minWidth: "220px",
+                      width: "260px",
+                      maxWidth: "300px",
+                      whiteSpace: "normal",
+                      overflowWrap: "anywhere",
+                      wordBreak: "break-word",
+                      lineHeight: 1.45,
+                      verticalAlign: "top",
+                    }}
+                  >
+                    {item.resmi_unvan || "-"}
                   </TableCell>
 
 
@@ -988,8 +1043,8 @@ function Yazarkasalar() {
                 <TableCell
                   colSpan={
                     canModify
-                      ? 8
-                      : 7
+                      ? 9
+                      : 8
                   }
                   align="center"
                   sx={{

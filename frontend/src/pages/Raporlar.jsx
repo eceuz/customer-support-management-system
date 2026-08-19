@@ -78,30 +78,21 @@ function Reports() {
 
 
   // =========================================================
-  // MÜŞTERİLER
+  // MÜŞTERİLER & ŞUBELER
   // =========================================================
 
   const [musteriler, setMusteriler] = useState([]);
-  const [filtrelenmisMusteriler, setFiltrelenmisMusteriler] =
-    useState([]);
-
-  const [musteriFilters, setMusteriFilters] = useState({
-    cariKodu: "",
-    musteriAdi: "",
-  });
-
-
-  // =========================================================
-  // ŞUBELER
-  // =========================================================
-
   const [subeler, setSubeler] = useState([]);
-  const [filtrelenmisSubeler, setFiltrelenmisSubeler] =
-    useState([]);
 
-  const [subeFilters, setSubeFilters] = useState({
+  const [
+    filtrelenmisMusteriSubeler,
+    setFiltrelenmisMusteriSubeler,
+  ] = useState([]);
+
+  const [musteriSubeFilters, setMusteriSubeFilters] = useState({
+    musteriKodu: "",
+    musteriAdi: "",
     subeKodu: "",
-    cari: "",
     subeAdi: "",
     bakim: "",
   });
@@ -118,6 +109,7 @@ function Reports() {
   const [yazarkasaFilters, setYazarkasaFilters] = useState({
     musteri: "",
     sube: "",
+    resmiUnvan: "",
     marka: "",
     sicilNo: "",
     baslangic: "",
@@ -133,7 +125,7 @@ function Reports() {
     const sekme = searchParams.get("sekme");
 
     if (sekme === "yazarkasalar") {
-      setAktifSekme(3);
+      setAktifSekme(2);
     }
   }, [searchParams]);
 
@@ -160,14 +152,25 @@ function Reports() {
       setCagrilar(cagriResponse.data);
       setFiltrelenmisCagrilar(cagriResponse.data);
 
-      setMusteriler(musteriResponse.data);
-      setFiltrelenmisMusteriler(musteriResponse.data);
+      const musteriVerileri = musteriResponse.data || [];
+      const subeVerileri = subeResponse.data || [];
 
-      setSubeler(subeResponse.data);
-      setFiltrelenmisSubeler(subeResponse.data);
+      setMusteriler(musteriVerileri);
 
-      setYazarkasalar(yazarkasaResponse.data || []);
-      setFiltrelenmisYazarkasalar(yazarkasaResponse.data || []);
+      const siraliSubeler = musteriKodunaGoreSirala(
+        subeVerileri,
+        musteriVerileri
+      );
+      setSubeler(siraliSubeler);
+      setFiltrelenmisMusteriSubeler(siraliSubeler);
+
+      const siraliYazarkasalar =
+        yazarkasalariBitiseGoreSirala(
+          yazarkasaResponse.data || []
+        );
+
+      setYazarkasalar(siraliYazarkasalar);
+      setFiltrelenmisYazarkasalar(siraliYazarkasalar);
 
     } catch (error) {
       console.error(
@@ -406,61 +409,239 @@ function Reports() {
 
 
   // =========================================================
-  // MÜŞTERİ FİLTRELERİ
+  // MÜŞTERİ & ŞUBE YARDIMCI FONKSİYONLARI
   // =========================================================
 
-  const handleMusteriChange = (e) => {
-    setMusteriFilters({
-      ...musteriFilters,
+  const musteriKodunaGoreSirala = (
+    liste,
+    musteriListesi = musteriler
+  ) => {
+    return [...liste].sort((a, b) => {
+      const musteriA = musteriListesi.find(
+        (musteri) =>
+          Number(musteri.musteri_id) ===
+          Number(a.musteri_id)
+      );
+
+      const musteriB = musteriListesi.find(
+        (musteri) =>
+          Number(musteri.musteri_id) ===
+          Number(b.musteri_id)
+      );
+
+      const kodA = musteriA?.cari_kodu;
+      const kodB = musteriB?.cari_kodu;
+
+      const kodAYok =
+        kodA === null ||
+        kodA === undefined ||
+        kodA === "";
+
+      const kodBYok =
+        kodB === null ||
+        kodB === undefined ||
+        kodB === "";
+
+      if (kodAYok && kodBYok) {
+        return 0;
+      }
+
+      if (kodAYok) {
+        return 1;
+      }
+
+      if (kodBYok) {
+        return -1;
+      }
+
+      const sayiA = Number(kodA);
+      const sayiB = Number(kodB);
+
+      if (
+        !Number.isNaN(sayiA) &&
+        !Number.isNaN(sayiB)
+      ) {
+        const musteriKodSirasi =
+          sayiA - sayiB;
+
+        if (musteriKodSirasi !== 0) {
+          return musteriKodSirasi;
+        }
+
+        // Aynı müşterinin birden fazla şubesi varsa
+        // kendi içinde şube koduna göre düzenli kalsın.
+        return (
+          Number(a.sube_kodu || 0) -
+          Number(b.sube_kodu || 0)
+        );
+      }
+
+      const metinSirasi =
+        String(kodA).localeCompare(
+          String(kodB),
+          "tr",
+          {
+            numeric: true,
+            sensitivity: "base",
+          }
+        );
+
+      if (metinSirasi !== 0) {
+        return metinSirasi;
+      }
+
+      return String(a.sube_kodu || "").localeCompare(
+        String(b.sube_kodu || ""),
+        "tr",
+        {
+          numeric: true,
+          sensitivity: "base",
+        }
+      );
+    });
+  };
+
+
+  const getMusteriById = (musteriId) => {
+    return musteriler.find(
+      (musteri) =>
+        Number(musteri.musteri_id) ===
+        Number(musteriId)
+    );
+  };
+
+
+  const getMusteriRaporAdi = (musteri) => {
+    return (
+      musteri?.musteri_adi ||
+      musteri?.cari_adi ||
+      "-"
+    );
+  };
+
+
+  // =========================================================
+  // MÜŞTERİ & ŞUBE FİLTRELERİ
+  // =========================================================
+
+  const handleMusteriSubeChange = (e) => {
+    setMusteriSubeFilters({
+      ...musteriSubeFilters,
       [e.target.name]: e.target.value,
     });
   };
 
 
-  const handleMusteriFilter = () => {
-    let sonuc = musteriler;
+  const handleMusteriSubeFilter = () => {
+    let sonuc = [...subeler];
+
+    const musteriKoduAranan =
+      musteriSubeFilters.musteriKodu
+        .trim()
+        .toLocaleLowerCase("tr-TR");
+
+    const musteriAdiAranan =
+      musteriSubeFilters.musteriAdi
+        .trim()
+        .toLocaleLowerCase("tr-TR");
+
+    const subeKoduAranan =
+      musteriSubeFilters.subeKodu
+        .trim()
+        .toLocaleLowerCase("tr-TR");
+
+    const subeAdiAranan =
+      musteriSubeFilters.subeAdi
+        .trim()
+        .toLocaleLowerCase("tr-TR");
 
 
-    if (musteriFilters.cariKodu) {
-      sonuc = sonuc.filter((item) =>
-        String(item.cari_kodu || "")
-          .toLowerCase()
-          .includes(
-            musteriFilters.cariKodu.toLowerCase()
-          )
+    if (musteriKoduAranan) {
+      sonuc = sonuc.filter((sube) => {
+        const musteri = getMusteriById(
+          sube.musteri_id
+        );
+
+        return String(
+          musteri?.cari_kodu || ""
+        )
+          .toLocaleLowerCase("tr-TR")
+          .includes(musteriKoduAranan);
+      });
+    }
+
+
+    if (musteriAdiAranan) {
+      sonuc = sonuc.filter((sube) => {
+        const musteri = getMusteriById(
+          sube.musteri_id
+        );
+
+        return getMusteriRaporAdi(musteri)
+          .toLocaleLowerCase("tr-TR")
+          .includes(musteriAdiAranan);
+      });
+    }
+
+
+    if (subeKoduAranan) {
+      sonuc = sonuc.filter((sube) =>
+        String(sube.sube_kodu || "")
+          .toLocaleLowerCase("tr-TR")
+          .includes(subeKoduAranan)
       );
     }
 
 
-    if (musteriFilters.musteriAdi) {
-      sonuc = sonuc.filter((item) =>
-        (item.musteri_adi || "")
-          .toLowerCase()
-          .includes(
-            musteriFilters.musteriAdi.toLowerCase()
-          )
+    if (subeAdiAranan) {
+      sonuc = sonuc.filter((sube) =>
+        (sube.sube_adi || "")
+          .toLocaleLowerCase("tr-TR")
+          .includes(subeAdiAranan)
       );
     }
 
 
-    setFiltrelenmisMusteriler(sonuc);
+    if (musteriSubeFilters.bakim !== "") {
+      const anlasmaVar =
+        musteriSubeFilters.bakim === "var";
+
+      sonuc = sonuc.filter(
+        (sube) =>
+          Boolean(
+            sube.bakim_anlasmasi_var_mi
+          ) === anlasmaVar
+      );
+    }
+
+
+    setFiltrelenmisMusteriSubeler(
+      musteriKodunaGoreSirala(sonuc)
+    );
   };
 
 
-  const handleMusteriClear = () => {
-    setMusteriFilters({
-      cariKodu: "",
+  const handleMusteriSubeClear = () => {
+    setMusteriSubeFilters({
+      musteriKodu: "",
       musteriAdi: "",
+      subeKodu: "",
+      subeAdi: "",
+      bakim: "",
     });
 
-    setFiltrelenmisMusteriler(musteriler);
+    setFiltrelenmisMusteriSubeler(
+      musteriKodunaGoreSirala(subeler)
+    );
   };
 
 
-  const handleExportMusteri = () => {
-    if (filtrelenmisMusteriler.length === 0) {
+  const handleExportMusteriSube = () => {
+    if (
+      filtrelenmisMusteriSubeler.length === 0
+    ) {
       alert(
-        "Dışarı aktarılacak müşteri kaydı bulunamadı!"
+        "Dışarı aktarılacak müşteri / şube kaydı bulunamadı!"
       );
 
       return;
@@ -470,151 +651,36 @@ function Reports() {
     const headers = [
       "Müşteri Kodu",
       "Müşteri Adı",
-    ];
-
-
-    const rows = filtrelenmisMusteriler.map(
-      (item) => [
-        item.cari_kodu || "",
-        item.musteri_adi || "",
-      ]
-    );
-
-
-    csvIndir(
-      headers,
-      rows,
-      `musteriler_${new Date()
-        .toISOString()
-        .slice(0, 10)}.csv`
-    );
-  };
-
-
-  // =========================================================
-  // ŞUBE FİLTRELERİ
-  // =========================================================
-
-  const handleSubeChange = (e) => {
-    setSubeFilters({
-      ...subeFilters,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-
-  const handleSubeFilter = () => {
-    let sonuc = subeler;
-
-
-    if (subeFilters.subeKodu) {
-      sonuc = sonuc.filter((item) =>
-        String(item.sube_kodu || "")
-          .toLowerCase()
-          .includes(
-            subeFilters.subeKodu.toLowerCase()
-          )
-      );
-    }
-
-
-    if (subeFilters.cari) {
-      sonuc = sonuc.filter((item) => {
-        const musteri = musteriler.find(
-          (m) =>
-            m.musteri_id === item.musteri_id
-        );
-
-        return (musteri?.musteri_adi || "")
-          .toLowerCase()
-          .includes(
-            subeFilters.cari.toLowerCase()
-          );
-      });
-    }
-
-
-    if (subeFilters.subeAdi) {
-      sonuc = sonuc.filter((item) =>
-        (item.sube_adi || "")
-          .toLowerCase()
-          .includes(
-            subeFilters.subeAdi.toLowerCase()
-          )
-      );
-    }
-
-
-    if (subeFilters.bakim !== "") {
-      const bakimVar =
-        subeFilters.bakim === "var";
-
-      sonuc = sonuc.filter(
-        (item) =>
-          Boolean(
-            item.bakim_anlasmasi_var_mi
-          ) === bakimVar
-      );
-    }
-
-
-    setFiltrelenmisSubeler(sonuc);
-  };
-
-
-  const handleSubeClear = () => {
-    setSubeFilters({
-      subeKodu: "",
-      cari: "",
-      subeAdi: "",
-      bakim: "",
-    });
-
-    setFiltrelenmisSubeler(subeler);
-  };
-
-
-  const handleExportSube = () => {
-    if (filtrelenmisSubeler.length === 0) {
-      alert(
-        "Dışarı aktarılacak şube kaydı bulunamadı!"
-      );
-
-      return;
-    }
-
-
-    const headers = [
       "Şube Kodu",
-      "Cari Adı",
       "Şube Adı",
       "Telefon Destek Anlaşması",
     ];
 
 
-    const rows = filtrelenmisSubeler.map(
-      (item) => {
-        const musteri = musteriler.find(
-          (m) =>
-            m.musteri_id === item.musteri_id
-        );
+    const rows =
+      filtrelenmisMusteriSubeler.map(
+        (sube) => {
+          const musteri = getMusteriById(
+            sube.musteri_id
+          );
 
-        return [
-          item.sube_kodu || "",
-          musteri?.musteri_adi || "",
-          item.sube_adi || "",
-          item.bakim_anlasmasi_var_mi
-            ? "Var"
-            : "Yok",
-        ];
-      }
-    );
+          return [
+            musteri?.cari_kodu || "",
+            getMusteriRaporAdi(musteri),
+            sube.sube_kodu || "",
+            sube.sube_adi || "",
+            sube.bakim_anlasmasi_var_mi
+              ? "Var"
+              : "Yok",
+          ];
+        }
+      );
 
 
     csvIndir(
       headers,
       rows,
-      `subeler_${new Date()
+      `musteriler_subeler_${new Date()
         .toISOString()
         .slice(0, 10)}.csv`
     );
@@ -738,6 +804,116 @@ function Reports() {
   };
 
 
+
+
+  const yazarkasalariBitiseGoreSirala = (liste) => {
+
+    const bugun = new Date();
+
+    const bugunUTC = Date.UTC(
+      bugun.getFullYear(),
+      bugun.getMonth(),
+      bugun.getDate()
+    );
+
+
+    const gunFarkiBul = (bitisTarihi) => {
+
+      if (!bitisTarihi) {
+        return null;
+      }
+
+
+      const [yil, ay, gun] =
+        bitisTarihi
+          .split("-")
+          .map(Number);
+
+
+      const bitisUTC = Date.UTC(
+        yil,
+        ay - 1,
+        gun
+      );
+
+
+      return Math.round(
+        (bitisUTC - bugunUTC) /
+        (1000 * 60 * 60 * 24)
+      );
+
+    };
+
+
+    return [...liste].sort(
+      (a, b) => {
+
+        const farkA =
+          gunFarkiBul(
+            a.bitis_tarihi
+          );
+
+        const farkB =
+          gunFarkiBul(
+            b.bitis_tarihi
+          );
+
+
+        if (
+          farkA === null &&
+          farkB === null
+        ) {
+          return 0;
+        }
+
+
+        if (farkA === null) {
+          return 1;
+        }
+
+        if (farkB === null) {
+          return -1;
+        }
+
+
+        const aktifA =
+          farkA >= 0;
+
+        const aktifB =
+          farkB >= 0;
+
+
+        if (
+          aktifA &&
+          !aktifB
+        ) {
+          return -1;
+        }
+
+        if (
+          !aktifA &&
+          aktifB
+        ) {
+          return 1;
+        }
+
+
+        if (
+          aktifA &&
+          aktifB
+        ) {
+          return farkA - farkB;
+        }
+
+
+        return farkB - farkA;
+
+      }
+    );
+
+  };
+
+
   // =========================================================
   // YAZARKASA FİLTRELERİ
   // =========================================================
@@ -774,6 +950,19 @@ function Reports() {
 
       sonuc = sonuc.filter((item) =>
         getYazarkasaSubeAdi(item.sube_id)
+          .toLocaleLowerCase("tr-TR")
+          .includes(aranan)
+      );
+    }
+
+
+    if (yazarkasaFilters.resmiUnvan) {
+      const aranan = yazarkasaFilters.resmiUnvan
+        .trim()
+        .toLocaleLowerCase("tr-TR");
+
+      sonuc = sonuc.filter((item) =>
+        (item.resmi_unvan || "")
           .toLocaleLowerCase("tr-TR")
           .includes(aranan)
       );
@@ -824,7 +1013,11 @@ function Reports() {
     }
 
 
-    setFiltrelenmisYazarkasalar(sonuc);
+    setFiltrelenmisYazarkasalar(
+      yazarkasalariBitiseGoreSirala(
+        sonuc
+      )
+    );
   };
 
 
@@ -832,13 +1025,18 @@ function Reports() {
     setYazarkasaFilters({
       musteri: "",
       sube: "",
+      resmiUnvan: "",
       marka: "",
       sicilNo: "",
       baslangic: "",
       bitis: "",
     });
 
-    setFiltrelenmisYazarkasalar(yazarkasalar);
+    setFiltrelenmisYazarkasalar(
+      yazarkasalariBitiseGoreSirala(
+        yazarkasalar
+      )
+    );
   };
 
 
@@ -855,6 +1053,7 @@ function Reports() {
     const headers = [
       "Müşteri",
       "Şube",
+      "Resmi Ünvan",
       "Marka",
       "Sicil No",
       "Başlangıç Tarihi",
@@ -866,6 +1065,7 @@ function Reports() {
     const rows = filtrelenmisYazarkasalar.map((item) => [
       getYazarkasaMusteriAdi(item.sube_id),
       getYazarkasaSubeAdi(item.sube_id),
+      item.resmi_unvan || "",
       item.marka || "",
       item.sicil_no || "",
       item.baslangic_tarihi
@@ -957,9 +1157,7 @@ function Reports() {
           >
             <Tab label="Çağrı Kayıtları" />
 
-            <Tab label="Müşteriler" />
-
-            <Tab label="Şubeler" />
+            <Tab label="Müşteriler & Şubeler" />
 
             <Tab label="Yazarkasalar" />
           </Tabs>
@@ -1324,11 +1522,18 @@ function Reports() {
 
               <TableContainer
                 sx={{
+                  width: "100%",
+                  maxWidth: "100%",
+                  overflowX: "auto",
                   borderRadius: "12px",
                   border: "1px solid #f1f5f9",
                 }}
               >
-                <Table>
+                <Table
+                  sx={{
+                    minWidth: "1250px",
+                  }}
+                >
                   <TableHead
                     sx={{
                       backgroundColor: "#f8fafc",
@@ -1603,7 +1808,7 @@ function Reports() {
 
 
         {/* ================================================= */}
-        {/* MÜŞTERİ RAPORU */}
+        {/* MÜŞTERİLER & ŞUBELER RAPORU */}
         {/* ================================================= */}
 
         {aktifSekme === 1 && (
@@ -1638,9 +1843,11 @@ function Reports() {
                     fullWidth
                     size="small"
                     label="Müşteri Kodu"
-                    name="cariKodu"
-                    value={musteriFilters.cariKodu}
-                    onChange={handleMusteriChange}
+                    name="musteriKodu"
+                    value={
+                      musteriSubeFilters.musteriKodu
+                    }
+                    onChange={handleMusteriSubeChange}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: "10px",
@@ -1662,8 +1869,10 @@ function Reports() {
                     size="small"
                     label="Müşteri Adı"
                     name="musteriAdi"
-                    value={musteriFilters.musteriAdi}
-                    onChange={handleMusteriChange}
+                    value={
+                      musteriSubeFilters.musteriAdi
+                    }
+                    onChange={handleMusteriSubeChange}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: "10px",
@@ -1676,6 +1885,95 @@ function Reports() {
                 <Grid
                   size={{
                     xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Şube Kodu"
+                    name="subeKodu"
+                    value={
+                      musteriSubeFilters.subeKodu
+                    }
+                    onChange={handleMusteriSubeChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  />
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Şube Adı"
+                    name="subeAdi"
+                    value={
+                      musteriSubeFilters.subeAdi
+                    }
+                    onChange={handleMusteriSubeChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  />
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
+                  <TextField
+                    select
+                    fullWidth
+                    size="small"
+                    label="Telefon Destek Anlaşması"
+                    name="bakim"
+                    value={
+                      musteriSubeFilters.bakim
+                    }
+                    onChange={handleMusteriSubeChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  >
+                    <MenuItem value="">
+                      Tümü
+                    </MenuItem>
+
+                    <MenuItem value="var">
+                      Var
+                    </MenuItem>
+
+                    <MenuItem value="yok">
+                      Yok
+                    </MenuItem>
+                  </TextField>
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
                     md: 4,
                   }}
                   sx={{
@@ -1686,7 +1984,7 @@ function Reports() {
                   <Button
                     variant="contained"
                     startIcon={<FilterListIcon />}
-                    onClick={handleMusteriFilter}
+                    onClick={handleMusteriSubeFilter}
                     size="small"
                     sx={{
                       flex: 1,
@@ -1710,7 +2008,7 @@ function Reports() {
                   <Button
                     variant="outlined"
                     startIcon={<RestartAltIcon />}
-                    onClick={handleMusteriClear}
+                    onClick={handleMusteriSubeClear}
                     size="small"
                     sx={{
                       height: "40px",
@@ -1733,7 +2031,7 @@ function Reports() {
             </Paper>
 
 
-            {/* MÜŞTERİ TABLOSU */}
+            {/* MÜŞTERİ & ŞUBE TABLOSU */}
             <Paper
               elevation={0}
               sx={{
@@ -1761,7 +2059,7 @@ function Reports() {
                     color: "#334155",
                   }}
                 >
-                  Müşteri Listesi
+                  Müşteri & Şube Listesi
                 </Typography>
 
 
@@ -1773,7 +2071,7 @@ function Reports() {
                   }}
                 >
                   <Chip
-                    label={`Toplam: ${filtrelenmisMusteriler.length}`}
+                    label={`Toplam: ${filtrelenmisMusteriSubeler.length}`}
                     size="small"
                     sx={{
                       backgroundColor: "#e0f2fe",
@@ -1786,7 +2084,7 @@ function Reports() {
                   <Button
                     variant="contained"
                     startIcon={<FileDownloadIcon />}
-                    onClick={handleExportMusteri}
+                    onClick={handleExportMusteriSube}
                     sx={excelButtonSx}
                   >
                     Excel'e Aktar
@@ -1825,330 +2123,7 @@ function Reports() {
                       >
                         Müşteri Adı
                       </TableCell>
-                    </TableRow>
-                  </TableHead>
 
-
-                  <TableBody>
-                    {filtrelenmisMusteriler.length > 0 ? (
-                      filtrelenmisMusteriler.map((row) => (
-                        <TableRow
-                          key={row.musteri_id}
-                          hover
-                          sx={{
-                            "&:last-child td, &:last-child th": {
-                              border: 0,
-                            },
-                          }}
-                        >
-                          <TableCell
-                            sx={{
-                              color: "#334155",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {row.cari_kodu}
-                          </TableCell>
-
-
-                          <TableCell
-                            sx={{
-                              color: "#1e293b",
-                              fontWeight: 600,
-                            }}
-                          >
-                            {row.musteri_adi}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={2}
-                          align="center"
-                          sx={{
-                            py: 4,
-                            color: "#94a3b8",
-                          }}
-                        >
-                          Kriterlere uygun müşteri
-                          bulunamadı.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
-          </>
-        )}
-
-
-        {/* ================================================= */}
-        {/* ŞUBE RAPORU */}
-        {/* ================================================= */}
-
-        {aktifSekme === 2 && (
-          <>
-            {/* FİLTRELER */}
-            <Paper
-              elevation={0}
-              sx={{
-                p: 3,
-                mb: 3,
-                borderRadius: "16px",
-                border: "1px solid #e2e8f0",
-                boxShadow:
-                  "0 4px 20px rgba(0, 0, 0, 0.02)",
-              }}
-            >
-              <Grid
-                container
-                spacing={2.5}
-                sx={{
-                  alignItems: "flex-end",
-                }}
-              >
-                <Grid
-                  size={{
-                    xs: 12,
-                    sm: 6,
-                    md: 3,
-                  }}
-                >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Şube Kodu"
-                    name="subeKodu"
-                    value={subeFilters.subeKodu}
-                    onChange={handleSubeChange}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "10px",
-                      },
-                    }}
-                  />
-                </Grid>
-
-
-                <Grid
-                  size={{
-                    xs: 12,
-                    sm: 6,
-                    md: 3,
-                  }}
-                >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Cari Adı"
-                    name="cari"
-                    value={subeFilters.cari}
-                    onChange={handleSubeChange}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "10px",
-                      },
-                    }}
-                  />
-                </Grid>
-
-
-                <Grid
-                  size={{
-                    xs: 12,
-                    sm: 6,
-                    md: 3,
-                  }}
-                >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Şube Adı"
-                    name="subeAdi"
-                    value={subeFilters.subeAdi}
-                    onChange={handleSubeChange}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "10px",
-                      },
-                    }}
-                  />
-                </Grid>
-
-
-                <Grid
-                  size={{
-                    xs: 12,
-                    sm: 6,
-                    md: 3,
-                  }}
-                >
-                  <TextField
-                    select
-                    fullWidth
-                    size="small"
-                    label="Telefon Destek Anlaşması"
-                    name="bakim"
-                    value={subeFilters.bakim}
-                    onChange={handleSubeChange}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "10px",
-                      },
-                    }}
-                  >
-                    <MenuItem value="">
-                      Tümü
-                    </MenuItem>
-
-                    <MenuItem value="var">
-                      Var
-                    </MenuItem>
-
-                    <MenuItem value="yok">
-                      Yok
-                    </MenuItem>
-                  </TextField>
-                </Grid>
-
-
-                <Grid
-                  size={{
-                    xs: 12,
-                    md: 4,
-                  }}
-                  sx={{
-                    display: "flex",
-                    gap: 1.5,
-                  }}
-                >
-                  <Button
-                    variant="contained"
-                    startIcon={<FilterListIcon />}
-                    onClick={handleSubeFilter}
-                    size="small"
-                    sx={{
-                      flex: 1,
-                      height: "40px",
-                      borderRadius: "10px",
-                      textTransform: "none",
-                      fontWeight: 600,
-                      boxShadow: "none",
-                      backgroundColor: "#2563eb",
-
-                      "&:hover": {
-                        backgroundColor: "#1d4ed8",
-                        boxShadow: "none",
-                      },
-                    }}
-                  >
-                    Filtrele
-                  </Button>
-
-
-                  <Button
-                    variant="outlined"
-                    startIcon={<RestartAltIcon />}
-                    onClick={handleSubeClear}
-                    size="small"
-                    sx={{
-                      height: "40px",
-                      borderRadius: "10px",
-                      textTransform: "none",
-                      fontWeight: 600,
-                      borderColor: "#cbd5e1",
-                      color: "#475569",
-
-                      "&:hover": {
-                        borderColor: "#94a3b8",
-                        backgroundColor: "#f1f5f9",
-                      },
-                    }}
-                  >
-                    Temizle
-                  </Button>
-                </Grid>
-              </Grid>
-            </Paper>
-
-
-            {/* ŞUBE TABLOSU */}
-            <Paper
-              elevation={0}
-              sx={{
-                p: 3,
-                borderRadius: "16px",
-                border: "1px solid #e2e8f0",
-                boxShadow:
-                  "0 4px 20px rgba(0, 0, 0, 0.02)",
-                mb: 3,
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 2,
-                  gap: 2,
-                }}
-              >
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontWeight: 700,
-                    color: "#334155",
-                  }}
-                >
-                  Şube Listesi
-                </Typography>
-
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                  }}
-                >
-                  <Chip
-                    label={`Toplam: ${filtrelenmisSubeler.length}`}
-                    size="small"
-                    sx={{
-                      backgroundColor: "#e0f2fe",
-                      color: "#0369a1",
-                      fontWeight: 600,
-                    }}
-                  />
-
-
-                  <Button
-                    variant="contained"
-                    startIcon={<FileDownloadIcon />}
-                    onClick={handleExportSube}
-                    sx={excelButtonSx}
-                  >
-                    Excel'e Aktar
-                  </Button>
-                </Box>
-              </Box>
-
-
-              <TableContainer
-                sx={{
-                  borderRadius: "12px",
-                  border: "1px solid #f1f5f9",
-                }}
-              >
-                <Table>
-                  <TableHead
-                    sx={{
-                      backgroundColor: "#f8fafc",
-                    }}
-                  >
-                    <TableRow>
                       <TableCell
                         sx={{
                           fontWeight: 700,
@@ -2156,15 +2131,6 @@ function Reports() {
                         }}
                       >
                         Şube Kodu
-                      </TableCell>
-
-                      <TableCell
-                        sx={{
-                          fontWeight: 700,
-                          color: "#475569",
-                        }}
-                      >
-                        Cari Adı
                       </TableCell>
 
                       <TableCell
@@ -2189,89 +2155,99 @@ function Reports() {
 
 
                   <TableBody>
-                    {filtrelenmisSubeler.length > 0 ? (
-                      filtrelenmisSubeler.map((row) => {
-                        const musteri =
-                          musteriler.find(
-                            (m) =>
-                              m.musteri_id ===
-                              row.musteri_id
-                          );
+                    {filtrelenmisMusteriSubeler.length > 0 ? (
+                      filtrelenmisMusteriSubeler.map(
+                        (sube) => {
+                          const musteri =
+                            getMusteriById(
+                              sube.musteri_id
+                            );
 
-                        return (
-                          <TableRow
-                            key={row.sube_id}
-                            hover
-                            sx={{
-                              "&:last-child td, &:last-child th":
-                                {
+                          return (
+                            <TableRow
+                              key={sube.sube_id}
+                              hover
+                              sx={{
+                                "&:last-child td, &:last-child th": {
                                   border: 0,
                                 },
-                            }}
-                          >
-                            <TableCell
-                              sx={{
-                                color: "#334155",
-                                fontWeight: 500,
                               }}
                             >
-                              {row.sube_kodu || "-"}
-                            </TableCell>
+                              <TableCell
+                                sx={{
+                                  color: "#334155",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {musteri?.cari_kodu || "-"}
+                              </TableCell>
 
 
-                            <TableCell
-                              sx={{
-                                color: "#1e293b",
-                                fontWeight: 600,
-                              }}
-                            >
-                              {musteri?.musteri_adi || "-"}
-                            </TableCell>
-
-
-                            <TableCell
-                              sx={{
-                                color: "#475569",
-                                fontWeight: 500,
-                              }}
-                            >
-                              {row.sube_adi}
-                            </TableCell>
-
-
-                            <TableCell>
-                              <span
-                                style={{
-                                  color:
-                                    row.bakim_anlasmasi_var_mi
-                                      ? "#16a34a"
-                                      : "#dc2626",
-
-                                  fontSize: "12px",
-
+                              <TableCell
+                                sx={{
+                                  color: "#1e293b",
                                   fontWeight: 600,
                                 }}
                               >
-                                {row.bakim_anlasmasi_var_mi
-                                  ? "✓ Telefon destek Anlaşması Var"
-                                  : "✕ Telefon destek Anlaşması Yok"}
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
+                                {getMusteriRaporAdi(
+                                  musteri
+                                )}
+                              </TableCell>
+
+
+                              <TableCell
+                                sx={{
+                                  color: "#334155",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {sube.sube_kodu || "-"}
+                              </TableCell>
+
+
+                              <TableCell
+                                sx={{
+                                  color: "#475569",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {sube.sube_adi || "-"}
+                              </TableCell>
+
+
+                              <TableCell>
+                                <span
+                                  style={{
+                                    color:
+                                      sube.bakim_anlasmasi_var_mi
+                                        ? "#16a34a"
+                                        : "#dc2626",
+
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {sube.bakim_anlasmasi_var_mi
+                                    ? "✓ Telefon Destek Anlaşması Var"
+                                    : "✕ Telefon Destek Anlaşması Yok"}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+                      )
                     ) : (
                       <TableRow>
                         <TableCell
-                          colSpan={4}
+                          colSpan={5}
                           align="center"
                           sx={{
                             py: 4,
                             color: "#94a3b8",
                           }}
                         >
-                          Kriterlere uygun şube
-                          bulunamadı.
+                          Kriterlere uygun müşteri / şube
+                          kaydı bulunamadı.
                         </TableCell>
                       </TableRow>
                     )}
@@ -2287,7 +2263,7 @@ function Reports() {
         {/* YAZARKASA RAPORU */}
         {/* ================================================= */}
 
-        {aktifSekme === 3 && (
+        {aktifSekme === 2 && (
           <>
             {/* FİLTRELER */}
             <Paper
@@ -2344,6 +2320,29 @@ function Reports() {
                     label="Şube"
                     name="sube"
                     value={yazarkasaFilters.sube}
+                    onChange={handleYazarkasaChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  />
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Resmi Ünvan"
+                    name="resmiUnvan"
+                    value={yazarkasaFilters.resmiUnvan}
                     onChange={handleYazarkasaChange}
                     sx={{
                       "& .MuiOutlinedInput-root": {
@@ -2594,11 +2593,18 @@ function Reports() {
 
               <TableContainer
                 sx={{
+                  width: "100%",
+                  maxWidth: "100%",
+                  overflowX: "auto",
                   borderRadius: "12px",
                   border: "1px solid #f1f5f9",
                 }}
               >
-                <Table>
+                <Table
+                  sx={{
+                    minWidth: "1250px",
+                  }}
+                >
                   <TableHead
                     sx={{
                       backgroundColor: "#f8fafc",
@@ -2621,6 +2627,17 @@ function Reports() {
                         }}
                       >
                         Şube
+                      </TableCell>
+
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          color: "#475569",
+                          minWidth: "240px",
+                          width: "280px",
+                        }}
+                      >
+                        Resmi Ünvan
                       </TableCell>
 
                       <TableCell
@@ -2721,6 +2738,23 @@ function Reports() {
 
                             <TableCell
                               sx={{
+                                color: "#475569",
+                                minWidth: "240px",
+                                width: "280px",
+                                maxWidth: "320px",
+                                whiteSpace: "normal",
+                                overflowWrap: "anywhere",
+                                wordBreak: "break-word",
+                                lineHeight: 1.45,
+                                verticalAlign: "top",
+                              }}
+                            >
+                              {row.resmi_unvan || "-"}
+                            </TableCell>
+
+
+                            <TableCell
+                              sx={{
                                 color: "#334155",
                                 fontWeight: 600,
                               }}
@@ -2814,7 +2848,7 @@ function Reports() {
                     ) : (
                       <TableRow>
                         <TableCell
-                          colSpan={7}
+                          colSpan={8}
                           align="center"
                           sx={{
                             py: 4,

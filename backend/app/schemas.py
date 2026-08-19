@@ -158,6 +158,7 @@ class YazarkasaCreate(BaseModel):
     baslangic_tarihi: Optional[date] = None
     bitis_tarihi: Optional[date] = None
     kayitli_tel_no: Optional[str] = None
+    resmi_unvan: Optional[str] = None
 
 
 class YazarkasaUpdate(BaseModel):
@@ -168,6 +169,7 @@ class YazarkasaUpdate(BaseModel):
     baslangic_tarihi: Optional[date] = None
     bitis_tarihi: Optional[date] = None
     kayitli_tel_no: Optional[str] = None
+    resmi_unvan: Optional[str] = None
 
 
 class YazarkasaResponse(BaseModel):
@@ -179,6 +181,7 @@ class YazarkasaResponse(BaseModel):
     baslangic_tarihi: Optional[date] = None
     bitis_tarihi: Optional[date] = None
     kayitli_tel_no: Optional[str] = None
+    resmi_unvan: Optional[str] = None
 
     class Config:
         from_attributes = True

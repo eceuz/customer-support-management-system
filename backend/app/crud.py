@@ -520,7 +520,8 @@ def create_yazarkasa(
         lisans_tipi=yazarkasa.lisans_tipi,
         baslangic_tarihi=yazarkasa.baslangic_tarihi,
         bitis_tarihi=yazarkasa.bitis_tarihi,
-        kayitli_tel_no=yazarkasa.kayitli_tel_no
+        kayitli_tel_no=yazarkasa.kayitli_tel_no,
+        resmi_unvan=yazarkasa.resmi_unvan
     )
 
     db.add(yeni_yazarkasa)

@@ -125,6 +125,10 @@ class Yazarkasalar(Base):
         String(30),
         nullable=True
     )
+    resmi_unvan = Column(
+        String(100),
+        nullable=True
+    )
 
     sube = relationship(
         "Subeler",
