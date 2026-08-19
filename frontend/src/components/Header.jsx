@@ -556,7 +556,7 @@ function Header() {
         >
 
           <img
-            src="/favicon.svg"
+            src="/logo.svg"
             alt="Logo"
             style={{
               width: "42px",
