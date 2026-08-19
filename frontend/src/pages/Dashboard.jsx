@@ -118,6 +118,9 @@ function Dashboard() {
                         onDataChange={
                             handleRefresh
                         }
+                        onRefresh={
+                            handleRefresh
+                        }
                     />
 
                 </div>

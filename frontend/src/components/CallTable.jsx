@@ -46,6 +46,7 @@ function CallTable({
   setSelectedCall,
   refreshTable,
   dashboardFilter,
+  onRefresh,
 }) {
   const [rows, setRows] = useState([]);
   const [arama, setArama] = useState("");
@@ -224,6 +225,9 @@ function CallTable({
 
 
       await loadCagrilar();
+      if (onRefresh) {
+        onRefresh();
+      }
 
 
       setSnackbar({
