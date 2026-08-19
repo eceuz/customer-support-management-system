@@ -11,7 +11,7 @@ from . import models
 
 SECRET_KEY = "destek_sistemi_gizli_anahtar"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 60*12
 
 
 def create_access_token(data: dict):
