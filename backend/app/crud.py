@@ -503,3 +503,120 @@ def get_son_24_saat_cagrilari(db: Session):
     )
 
     return sonuc
+
+# =========================================================
+# YAZARKASA İŞLEMLERİ
+# =========================================================
+
+def create_yazarkasa(
+    db: Session,
+    yazarkasa: schemas.YazarkasaCreate
+):
+
+    yeni_yazarkasa = models.Yazarkasalar(
+        sube_id=yazarkasa.sube_id,
+        marka=yazarkasa.marka,
+        sicil_no=yazarkasa.sicil_no,
+        lisans_tipi=yazarkasa.lisans_tipi,
+        baslangic_tarihi=yazarkasa.baslangic_tarihi,
+        bitis_tarihi=yazarkasa.bitis_tarihi,
+        kayitli_tel_no=yazarkasa.kayitli_tel_no
+    )
+
+    db.add(yeni_yazarkasa)
+    db.commit()
+    db.refresh(yeni_yazarkasa)
+
+    return yeni_yazarkasa
+
+
+def get_yazarkasalar(
+    db: Session,
+    sube_id: int | None = None
+):
+
+    query = db.query(models.Yazarkasalar)
+
+    if sube_id is not None:
+        query = query.filter(
+            models.Yazarkasalar.sube_id == sube_id
+        )
+
+    return (
+        query
+        .order_by(models.Yazarkasalar.yazarkasa_id.desc())
+        .all()
+    )
+
+
+def get_yazarkasa(
+    db: Session,
+    yazarkasa_id: int
+):
+
+    return (
+        db.query(models.Yazarkasalar)
+        .filter(
+            models.Yazarkasalar.yazarkasa_id ==
+            yazarkasa_id
+        )
+        .first()
+    )
+
+
+def update_yazarkasa(
+    db: Session,
+    yazarkasa_id: int,
+    yazarkasa: schemas.YazarkasaUpdate
+):
+
+    mevcut_yazarkasa = (
+        db.query(models.Yazarkasalar)
+        .filter(
+            models.Yazarkasalar.yazarkasa_id ==
+            yazarkasa_id
+        )
+        .first()
+    )
+
+    if not mevcut_yazarkasa:
+        return None
+
+    guncellenecek_veriler = (
+        yazarkasa.model_dump(exclude_unset=True)
+    )
+
+    for alan, deger in guncellenecek_veriler.items():
+        setattr(
+            mevcut_yazarkasa,
+            alan,
+            deger
+        )
+
+    db.commit()
+    db.refresh(mevcut_yazarkasa)
+
+    return mevcut_yazarkasa
+
+
+def delete_yazarkasa(
+    db: Session,
+    yazarkasa_id: int
+):
+
+    mevcut_yazarkasa = (
+        db.query(models.Yazarkasalar)
+        .filter(
+            models.Yazarkasalar.yazarkasa_id ==
+            yazarkasa_id
+        )
+        .first()
+    )
+
+    if not mevcut_yazarkasa:
+        return False
+
+    db.delete(mevcut_yazarkasa)
+    db.commit()
+
+    return True

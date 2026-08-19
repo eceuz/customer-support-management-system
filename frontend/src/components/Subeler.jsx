@@ -264,7 +264,7 @@ function Subeler() {
               color: "#1e293b",
             }}
           >
-            Şube Ayarları
+            Şubeler
           </Typography>
 
           <Typography

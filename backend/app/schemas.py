@@ -67,7 +67,7 @@ class KullaniciResponse(BaseModel):
     rol: str
 
 
-from datetime import datetime
+from datetime import date, datetime
 
 class CagriCreate(BaseModel):
     sube_id: int
@@ -150,3 +150,35 @@ class RaporResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class YazarkasaCreate(BaseModel):
+    sube_id: int
+    marka: str
+    sicil_no: str
+    lisans_tipi: Optional[str] = None
+    baslangic_tarihi: Optional[date] = None
+    bitis_tarihi: Optional[date] = None
+    kayitli_tel_no: Optional[str] = None
+
+
+class YazarkasaUpdate(BaseModel):
+    sube_id: Optional[int] = None
+    marka: Optional[str] = None
+    sicil_no: Optional[str] = None
+    lisans_tipi: Optional[str] = None
+    baslangic_tarihi: Optional[date] = None
+    bitis_tarihi: Optional[date] = None
+    kayitli_tel_no: Optional[str] = None
+
+
+class YazarkasaResponse(BaseModel):
+    yazarkasa_id: int
+    sube_id: int
+    marka: str
+    sicil_no: str
+    lisans_tipi: Optional[str] = None
+    baslangic_tarihi: Optional[date] = None
+    bitis_tarihi: Optional[date] = None
+    kayitli_tel_no: Optional[str] = None
+
+    class Config:
+        from_attributes = True

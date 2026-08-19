@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -421,3 +421,159 @@ def sonuc_secenekleri(
         for sonuc in sonuclar
         if sonuc[0]
     ]
+
+# =========================================================
+# YAZARKASA İŞLEMLERİ
+# =========================================================
+
+
+@app.post(
+    "/yazarkasalar",
+    response_model=schemas.YazarkasaResponse
+)
+def yazarkasa_olustur(
+    yazarkasa: schemas.YazarkasaCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        require_roles("ADMİN", "DESTEK")
+    )
+):
+
+    # Şube gerçekten var mı?
+    sube = (
+        db.query(models.Subeler)
+        .filter(
+            models.Subeler.sube_id ==
+            yazarkasa.sube_id
+        )
+        .first()
+    )
+
+    if sube is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Şube bulunamadı."
+        )
+
+    return crud.create_yazarkasa(
+        db,
+        yazarkasa
+    )
+
+
+@app.get(
+    "/yazarkasalar",
+    response_model=list[schemas.YazarkasaResponse]
+)
+def yazarkasalari_listele(
+    sube_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        get_current_user
+    )
+):
+
+    return crud.get_yazarkasalar(
+        db,
+        sube_id
+    )
+
+
+@app.get(
+    "/yazarkasalar/{yazarkasa_id}",
+    response_model=schemas.YazarkasaResponse
+)
+def yazarkasa_getir(
+    yazarkasa_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        get_current_user
+    )
+):
+
+    yazarkasa = crud.get_yazarkasa(
+        db,
+        yazarkasa_id
+    )
+
+    if yazarkasa is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Yazarkasa kaydı bulunamadı."
+        )
+
+    return yazarkasa
+
+
+@app.put(
+    "/yazarkasalar/{yazarkasa_id}",
+    response_model=schemas.YazarkasaResponse
+)
+def yazarkasa_guncelle(
+    yazarkasa_id: int,
+    yazarkasa: schemas.YazarkasaUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        require_roles("ADMİN", "DESTEK")
+    )
+):
+
+    # Şube değiştirilmek isteniyorsa
+    # yeni şubenin gerçekten var olduğunu kontrol et
+    if yazarkasa.sube_id is not None:
+
+        sube = (
+            db.query(models.Subeler)
+            .filter(
+                models.Subeler.sube_id ==
+                yazarkasa.sube_id
+            )
+            .first()
+        )
+
+        if sube is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Şube bulunamadı."
+            )
+
+    sonuc = crud.update_yazarkasa(
+        db,
+        yazarkasa_id,
+        yazarkasa
+    )
+
+    if sonuc is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Yazarkasa kaydı bulunamadı."
+        )
+
+    return sonuc
+
+
+@app.delete(
+    "/yazarkasalar/{yazarkasa_id}"
+)
+def yazarkasa_sil(
+    yazarkasa_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        require_roles("ADMİN", "DESTEK")
+    )
+):
+
+    sonuc = crud.delete_yazarkasa(
+        db,
+        yazarkasa_id
+    )
+
+    if not sonuc:
+        raise HTTPException(
+            status_code=404,
+            detail="Yazarkasa kaydı bulunamadı."
+        )
+
+    return {
+        "message": "Yazarkasa kaydı silindi."
+    }

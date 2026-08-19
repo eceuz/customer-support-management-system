@@ -234,7 +234,7 @@ function ArizaTipleri() {
               color: "#1e293b",
             }}
           >
-            Arıza Tipi Ayarları
+            Arıza Tipleri
           </Typography>
 
           <Typography

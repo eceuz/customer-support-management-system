@@ -250,7 +250,7 @@ function Kullanicilar() {
               color: "#1e293b",
             }}
           >
-            Kullanıcı Ayarları
+            Kullanıcılar
           </Typography>
 
           <Typography

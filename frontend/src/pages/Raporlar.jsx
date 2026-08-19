@@ -1,5 +1,6 @@
 import Header from "../components/Header";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import {
   Paper,
@@ -28,11 +29,13 @@ import api from "../api/api";
 
 import { getMusteriler } from "../api/musteriService";
 import { getTumSubeler } from "../api/subeService";
+import { getYazarkasalar } from "../api/yazarkasaService";
 
 import "../styles/raporlar.css";
 
 
 function Reports() {
+  const [searchParams] = useSearchParams();
   const [aktifSekme, setAktifSekme] = useState(0);
 
 
@@ -105,8 +108,35 @@ function Reports() {
 
 
   // =========================================================
+  // YAZARKASALAR
+  // =========================================================
+
+  const [yazarkasalar, setYazarkasalar] = useState([]);
+  const [filtrelenmisYazarkasalar, setFiltrelenmisYazarkasalar] =
+    useState([]);
+
+  const [yazarkasaFilters, setYazarkasaFilters] = useState({
+    musteri: "",
+    sube: "",
+    marka: "",
+    sicilNo: "",
+    baslangic: "",
+    bitis: "",
+  });
+
+
+  // =========================================================
   // VERİLERİ YÜKLE
   // =========================================================
+
+  useEffect(() => {
+    const sekme = searchParams.get("sekme");
+
+    if (sekme === "yazarkasalar") {
+      setAktifSekme(3);
+    }
+  }, [searchParams]);
+
 
   useEffect(() => {
     veriYukle();
@@ -119,10 +149,12 @@ function Reports() {
         cagriResponse,
         musteriResponse,
         subeResponse,
+        yazarkasaResponse,
       ] = await Promise.all([
         api.get("/cagri-listesi"),
         getMusteriler(),
         getTumSubeler(),
+        getYazarkasalar(),
       ]);
 
       setCagrilar(cagriResponse.data);
@@ -133,6 +165,9 @@ function Reports() {
 
       setSubeler(subeResponse.data);
       setFiltrelenmisSubeler(subeResponse.data);
+
+      setYazarkasalar(yazarkasaResponse.data || []);
+      setFiltrelenmisYazarkasalar(yazarkasaResponse.data || []);
 
     } catch (error) {
       console.error(
@@ -587,6 +622,273 @@ function Reports() {
 
 
   // =========================================================
+  // YAZARKASA YARDIMCI FONKSİYONLARI
+  // =========================================================
+
+  const getYazarkasaSube = (subeId) => {
+    return subeler.find(
+      (sube) => Number(sube.sube_id) === Number(subeId)
+    );
+  };
+
+
+  const getYazarkasaMusteri = (subeId) => {
+    const sube = getYazarkasaSube(subeId);
+
+    if (!sube) {
+      return null;
+    }
+
+    return musteriler.find(
+      (musteri) =>
+        Number(musteri.musteri_id) === Number(sube.musteri_id)
+    );
+  };
+
+
+  const getYazarkasaMusteriAdi = (subeId) => {
+    const musteri = getYazarkasaMusteri(subeId);
+
+    return (
+      musteri?.musteri_adi ||
+      musteri?.cari_adi ||
+      "-"
+    );
+  };
+
+
+  const getYazarkasaSubeAdi = (subeId) => {
+    const sube = getYazarkasaSube(subeId);
+
+    return sube?.sube_adi || "-";
+  };
+
+
+  const formatYazarkasaTarih = (tarih) => {
+    if (!tarih) {
+      return "-";
+    }
+
+    return new Date(
+      `${tarih}T00:00:00`
+    ).toLocaleDateString("tr-TR");
+  };
+
+
+  const getYazarkasaBitisDurumu = (bitisTarihi) => {
+    if (!bitisTarihi) {
+      return null;
+    }
+
+    const bugun = new Date();
+
+    const bugunUTC = Date.UTC(
+      bugun.getFullYear(),
+      bugun.getMonth(),
+      bugun.getDate()
+    );
+
+    const [yil, ay, gun] = bitisTarihi
+      .split("-")
+      .map(Number);
+
+    const bitisUTC = Date.UTC(
+      yil,
+      ay - 1,
+      gun
+    );
+
+    const gunFarki = Math.round(
+      (bitisUTC - bugunUTC) /
+        (1000 * 60 * 60 * 24)
+    );
+
+
+    if (gunFarki < 0) {
+      return {
+        label: "Süresi Doldu",
+        color: "#b91c1c",
+        backgroundColor: "#fee2e2",
+        rowBackground: "#fff7f7",
+      };
+    }
+
+
+    if (gunFarki === 0) {
+      return {
+        label: "Bugün Bitiyor",
+        color: "#c2410c",
+        backgroundColor: "#ffedd5",
+        rowBackground: "#fffaf5",
+      };
+    }
+
+
+    if (gunFarki === 1) {
+      return {
+        label: "1 Gün Kaldı",
+        color: "#a16207",
+        backgroundColor: "#fef3c7",
+        rowBackground: "#fffdf5",
+      };
+    }
+
+
+    return null;
+  };
+
+
+  // =========================================================
+  // YAZARKASA FİLTRELERİ
+  // =========================================================
+
+  const handleYazarkasaChange = (e) => {
+    setYazarkasaFilters({
+      ...yazarkasaFilters,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+
+  const handleYazarkasaFilter = () => {
+    let sonuc = yazarkasalar;
+
+
+    if (yazarkasaFilters.musteri) {
+      const aranan = yazarkasaFilters.musteri
+        .trim()
+        .toLocaleLowerCase("tr-TR");
+
+      sonuc = sonuc.filter((item) =>
+        getYazarkasaMusteriAdi(item.sube_id)
+          .toLocaleLowerCase("tr-TR")
+          .includes(aranan)
+      );
+    }
+
+
+    if (yazarkasaFilters.sube) {
+      const aranan = yazarkasaFilters.sube
+        .trim()
+        .toLocaleLowerCase("tr-TR");
+
+      sonuc = sonuc.filter((item) =>
+        getYazarkasaSubeAdi(item.sube_id)
+          .toLocaleLowerCase("tr-TR")
+          .includes(aranan)
+      );
+    }
+
+
+    if (yazarkasaFilters.marka) {
+      const aranan = yazarkasaFilters.marka
+        .trim()
+        .toLocaleLowerCase("tr-TR");
+
+      sonuc = sonuc.filter((item) =>
+        (item.marka || "")
+          .toLocaleLowerCase("tr-TR")
+          .includes(aranan)
+      );
+    }
+
+
+    if (yazarkasaFilters.sicilNo) {
+      const aranan = yazarkasaFilters.sicilNo
+        .trim()
+        .toLocaleLowerCase("tr-TR");
+
+      sonuc = sonuc.filter((item) =>
+        (item.sicil_no || "")
+          .toLocaleLowerCase("tr-TR")
+          .includes(aranan)
+      );
+    }
+
+
+    if (yazarkasaFilters.baslangic) {
+      sonuc = sonuc.filter(
+        (item) =>
+          item.baslangic_tarihi &&
+          item.baslangic_tarihi >= yazarkasaFilters.baslangic
+      );
+    }
+
+
+    if (yazarkasaFilters.bitis) {
+      sonuc = sonuc.filter(
+        (item) =>
+          item.bitis_tarihi &&
+          item.bitis_tarihi <= yazarkasaFilters.bitis
+      );
+    }
+
+
+    setFiltrelenmisYazarkasalar(sonuc);
+  };
+
+
+  const handleYazarkasaClear = () => {
+    setYazarkasaFilters({
+      musteri: "",
+      sube: "",
+      marka: "",
+      sicilNo: "",
+      baslangic: "",
+      bitis: "",
+    });
+
+    setFiltrelenmisYazarkasalar(yazarkasalar);
+  };
+
+
+  const handleExportYazarkasa = () => {
+    if (filtrelenmisYazarkasalar.length === 0) {
+      alert(
+        "Dışarı aktarılacak yazarkasa kaydı bulunamadı!"
+      );
+
+      return;
+    }
+
+
+    const headers = [
+      "Müşteri",
+      "Şube",
+      "Marka",
+      "Sicil No",
+      "Başlangıç Tarihi",
+      "Bitiş Tarihi",
+      "Kayıtlı Telefon",
+    ];
+
+
+    const rows = filtrelenmisYazarkasalar.map((item) => [
+      getYazarkasaMusteriAdi(item.sube_id),
+      getYazarkasaSubeAdi(item.sube_id),
+      item.marka || "",
+      item.sicil_no || "",
+      item.baslangic_tarihi
+        ? formatYazarkasaTarih(item.baslangic_tarihi)
+        : "",
+      item.bitis_tarihi
+        ? formatYazarkasaTarih(item.bitis_tarihi)
+        : "",
+      item.kayitli_tel_no || "",
+    ]);
+
+
+    csvIndir(
+      headers,
+      rows,
+      `yazarkasalar_${new Date()
+        .toISOString()
+        .slice(0, 10)}.csv`
+    );
+  };
+
+
+  // =========================================================
   // ORTAK EXCEL BUTONU
   // =========================================================
 
@@ -658,6 +960,8 @@ function Reports() {
             <Tab label="Müşteriler" />
 
             <Tab label="Şubeler" />
+
+            <Tab label="Yazarkasalar" />
           </Tabs>
         </Paper>
 
@@ -1967,6 +2271,557 @@ function Reports() {
                           }}
                         >
                           Kriterlere uygun şube
+                          bulunamadı.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </>
+        )}
+
+
+        {/* ================================================= */}
+        {/* YAZARKASA RAPORU */}
+        {/* ================================================= */}
+
+        {aktifSekme === 3 && (
+          <>
+            {/* FİLTRELER */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                mb: 3,
+                borderRadius: "16px",
+                border: "1px solid #e2e8f0",
+                boxShadow:
+                  "0 4px 20px rgba(0, 0, 0, 0.02)",
+              }}
+            >
+              <Grid
+                container
+                spacing={2.5}
+                sx={{
+                  alignItems: "flex-end",
+                }}
+              >
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Müşteri"
+                    name="musteri"
+                    value={yazarkasaFilters.musteri}
+                    onChange={handleYazarkasaChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  />
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Şube"
+                    name="sube"
+                    value={yazarkasaFilters.sube}
+                    onChange={handleYazarkasaChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  />
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Marka"
+                    name="marka"
+                    value={yazarkasaFilters.marka}
+                    onChange={handleYazarkasaChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  />
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Sicil No"
+                    name="sicilNo"
+                    value={yazarkasaFilters.sicilNo}
+                    onChange={handleYazarkasaChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  />
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: "block",
+                      mb: 0.8,
+                      fontWeight: 600,
+                      color: "#64748b",
+                    }}
+                  >
+                    Başlangıç Tarihi
+                  </Typography>
+
+                  <TextField
+                    fullWidth
+                    type="date"
+                    size="small"
+                    name="baslangic"
+                    value={yazarkasaFilters.baslangic}
+                    onChange={handleYazarkasaChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  />
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: "block",
+                      mb: 0.8,
+                      fontWeight: 600,
+                      color: "#64748b",
+                    }}
+                  >
+                    Bitiş Tarihi
+                  </Typography>
+
+                  <TextField
+                    fullWidth
+                    type="date"
+                    size="small"
+                    name="bitis"
+                    value={yazarkasaFilters.bitis}
+                    onChange={handleYazarkasaChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  />
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    md: 4,
+                  }}
+                  sx={{
+                    display: "flex",
+                    gap: 1.5,
+                  }}
+                >
+                  <Button
+                    variant="contained"
+                    startIcon={<FilterListIcon />}
+                    onClick={handleYazarkasaFilter}
+                    size="small"
+                    sx={{
+                      flex: 1,
+                      height: "40px",
+                      borderRadius: "10px",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      boxShadow: "none",
+                      backgroundColor: "#2563eb",
+
+                      "&:hover": {
+                        backgroundColor: "#1d4ed8",
+                        boxShadow: "none",
+                      },
+                    }}
+                  >
+                    Filtrele
+                  </Button>
+
+
+                  <Button
+                    variant="outlined"
+                    startIcon={<RestartAltIcon />}
+                    onClick={handleYazarkasaClear}
+                    size="small"
+                    sx={{
+                      height: "40px",
+                      borderRadius: "10px",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      borderColor: "#cbd5e1",
+                      color: "#475569",
+
+                      "&:hover": {
+                        borderColor: "#94a3b8",
+                        backgroundColor: "#f1f5f9",
+                      },
+                    }}
+                  >
+                    Temizle
+                  </Button>
+                </Grid>
+              </Grid>
+            </Paper>
+
+
+            {/* YAZARKASA TABLOSU */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: "16px",
+                border: "1px solid #e2e8f0",
+                boxShadow:
+                  "0 4px 20px rgba(0, 0, 0, 0.02)",
+                mb: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                  gap: 2,
+                }}
+              >
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 700,
+                    color: "#334155",
+                  }}
+                >
+                  Yazarkasa Listesi
+                </Typography>
+
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                  }}
+                >
+                  <Chip
+                    label={`Toplam: ${filtrelenmisYazarkasalar.length}`}
+                    size="small"
+                    sx={{
+                      backgroundColor: "#e0f2fe",
+                      color: "#0369a1",
+                      fontWeight: 600,
+                    }}
+                  />
+
+
+                  <Button
+                    variant="contained"
+                    startIcon={<FileDownloadIcon />}
+                    onClick={handleExportYazarkasa}
+                    sx={excelButtonSx}
+                  >
+                    Excel'e Aktar
+                  </Button>
+                </Box>
+              </Box>
+
+
+              <TableContainer
+                sx={{
+                  borderRadius: "12px",
+                  border: "1px solid #f1f5f9",
+                }}
+              >
+                <Table>
+                  <TableHead
+                    sx={{
+                      backgroundColor: "#f8fafc",
+                    }}
+                  >
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          color: "#475569",
+                        }}
+                      >
+                        Müşteri
+                      </TableCell>
+
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          color: "#475569",
+                        }}
+                      >
+                        Şube
+                      </TableCell>
+
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          color: "#475569",
+                        }}
+                      >
+                        Marka
+                      </TableCell>
+
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          color: "#475569",
+                        }}
+                      >
+                        Sicil No
+                      </TableCell>
+
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          color: "#475569",
+                        }}
+                      >
+                        Başlangıç
+                      </TableCell>
+
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          color: "#475569",
+                        }}
+                      >
+                        Bitiş
+                      </TableCell>
+
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          color: "#475569",
+                        }}
+                      >
+                        Kayıtlı Telefon
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+
+
+                  <TableBody>
+                    {filtrelenmisYazarkasalar.length > 0 ? (
+                      filtrelenmisYazarkasalar.map((row) => {
+                        const bitisDurumu =
+                          getYazarkasaBitisDurumu(
+                            row.bitis_tarihi
+                          );
+
+                        return (
+                          <TableRow
+                            key={row.yazarkasa_id}
+                            hover
+                            sx={{
+                              backgroundColor:
+                                bitisDurumu?.rowBackground ||
+                                "transparent",
+
+                              "&:hover": {
+                                backgroundColor:
+                                  bitisDurumu?.rowBackground ||
+                                  "#f8fafc",
+                              },
+
+                              "&:last-child td, &:last-child th": {
+                                border: 0,
+                              },
+                            }}
+                          >
+                            <TableCell
+                              sx={{
+                                color: "#1e293b",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {getYazarkasaMusteriAdi(row.sube_id)}
+                            </TableCell>
+
+
+                            <TableCell
+                              sx={{
+                                color: "#475569",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {getYazarkasaSubeAdi(row.sube_id)}
+                            </TableCell>
+
+
+                            <TableCell
+                              sx={{
+                                color: "#334155",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {row.marka || "-"}
+                            </TableCell>
+
+
+                            <TableCell
+                              sx={{
+                                color: "#334155",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {row.sicil_no || "-"}
+                            </TableCell>
+
+
+                            <TableCell
+                              sx={{
+                                color: "#475569",
+                              }}
+                            >
+                              {formatYazarkasaTarih(
+                                row.baslangic_tarihi
+                              )}
+                            </TableCell>
+
+
+                            <TableCell>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "flex-start",
+                                  gap: 0.7,
+                                }}
+                              >
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    color:
+                                      bitisDurumu?.color ||
+                                      "#475569",
+                                    fontWeight:
+                                      bitisDurumu
+                                        ? 700
+                                        : 400,
+                                  }}
+                                >
+                                  {formatYazarkasaTarih(
+                                    row.bitis_tarihi
+                                  )}
+                                </Typography>
+
+
+                                {bitisDurumu && (
+                                  <Chip
+                                    label={bitisDurumu.label}
+                                    size="small"
+                                    sx={{
+                                      height: "22px",
+                                      fontSize: "11px",
+                                      fontWeight: 700,
+                                      color:
+                                        bitisDurumu.color,
+                                      backgroundColor:
+                                        bitisDurumu.backgroundColor,
+                                      borderRadius: "6px",
+
+                                      "& .MuiChip-label": {
+                                        px: 1,
+                                      },
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                            </TableCell>
+
+
+                            <TableCell
+                              sx={{
+                                color: "#475569",
+                              }}
+                            >
+                              {row.kayitli_tel_no || "-"}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={7}
+                          align="center"
+                          sx={{
+                            py: 4,
+                            color: "#94a3b8",
+                          }}
+                        >
+                          Kriterlere uygun yazarkasa kaydı
                           bulunamadı.
                         </TableCell>
                       </TableRow>

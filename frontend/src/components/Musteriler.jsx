@@ -242,7 +242,7 @@ function Musteriler() {
               color: "#1e293b",
             }}
           >
-            Müşteri Ayarları
+            Müşteriler
           </Typography>
 
           <Typography

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey,Date, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
 from .database import Base
@@ -27,6 +27,7 @@ class Subeler(Base):
     # Relationships
     musteri = relationship("Musteriler", back_populates="subeler")
     cagri_kayitlari = relationship("CagriKayitlari", back_populates="sube")
+    yazarkasalar = relationship("Yazarkasalar",back_populates="sube")
 
 
 class Kullanicilar(Base):
@@ -75,3 +76,57 @@ class CagriKayitlari(Base):
     sube = relationship("Subeler", back_populates="cagri_kayitlari")
     kullanici = relationship("Kullanicilar", back_populates="cagri_kayitlari")
     ariza_tipi = relationship("ArizaTipleri", back_populates="cagri_kayitlari")
+
+class Yazarkasalar(Base):
+
+    __tablename__ = "YAZARKASALAR"
+
+    yazarkasa_id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    sube_id = Column(
+        Integer,
+        ForeignKey("SUBELER.sube_id"),
+        nullable=False,
+        index=True
+    )
+
+    marka = Column(
+        String(50),
+        nullable=False
+    )
+
+    sicil_no = Column(
+        String(100),
+        nullable=False,
+        index=True
+    )
+
+    lisans_tipi = Column(
+        String(50),
+        nullable=True
+    )
+
+    baslangic_tarihi = Column(
+        Date,
+        nullable=True
+    )
+
+    bitis_tarihi = Column(
+        Date,
+        nullable=True,
+        index=True
+    )
+
+    kayitli_tel_no = Column(
+        String(30),
+        nullable=True
+    )
+
+    sube = relationship(
+        "Subeler",
+        back_populates="yazarkasalar"
+    )
