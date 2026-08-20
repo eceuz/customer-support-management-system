@@ -31,6 +31,7 @@ import { useEffect, useState } from "react";
 import {
   deleteCagri,
   getSon24SaatCagriListesi,
+  getSon7GunBekleyenCagriListesi,
 } from "../api/cagriService";
 
 import {
@@ -63,19 +64,32 @@ function CallTable({
 
   useEffect(() => {
     loadCagrilar();
-  }, [refreshTable]);
+  }, [refreshTable, dashboardFilter]);
 
 
   // =========================================================
-  // SON 24 SAATTEKİ ÇAĞRILARI YÜKLE
+  // ÇAĞRILARI YÜKLE
+  //
+  // Beklemede kartı:
+  //   Son 7 gündeki "Beklemede" kayıtları
+  //
+  // Diğer kartlar / normal tablo:
+  //   Son 24 saatteki kayıtlar
   // =========================================================
 
   const loadCagrilar = async () => {
     try {
-      const response =
-        await getSon24SaatCagriListesi();
 
-      setRows(response.data);
+      const response =
+        dashboardFilter === "bekleyen"
+          ? await getSon7GunBekleyenCagriListesi()
+          : await getSon24SaatCagriListesi();
+
+
+      setRows(
+        response.data || []
+      );
+
 
     } catch (error) {
       console.error(
@@ -270,7 +284,8 @@ function CallTable({
 
   // =========================================================
   // DASHBOARD KART FİLTRESİ
-  // SADECE SON 24 SAATTE GELEN KAYITLAR ÜZERİNDE ÇALIŞIR
+  // Beklemede: son 7 günlük endpoint sonucu üzerinde çalışır.
+  // Diğerleri: son 24 saatlik endpoint sonucu üzerinde çalışır.
   // =========================================================
 
   const dashboardFiltreliKayitlar =
@@ -406,7 +421,7 @@ function CallTable({
         return "Bugün Açılan Çağrılar";
 
       case "bekleyen":
-        return "Son 24 Saatte Bekleyen Çağrılar";
+        return "Son 7 Günde Bekleyen Çağrılar";
 
       case "servise_aktarilan":
         return "Son 24 Saatte Servise Aktarılan Çağrılar";
@@ -786,7 +801,9 @@ function CallTable({
                 >
 
                   <Typography color="text.secondary">
-                    Son 24 saatte bu kritere uygun çağrı kaydı bulunamadı.
+                    {dashboardFilter === "bekleyen"
+                      ? "Son 7 günde beklemede olan çağrı kaydı bulunamadı."
+                      : "Son 24 saatte bu kritere uygun çağrı kaydı bulunamadı."}
                   </Typography>
 
                 </TableCell>

@@ -402,6 +402,13 @@ def son_24_saat_cagri_listesi(
 ):
     return crud.get_son_24_saat_cagrilari(db)
 
+@app.get("/cagrilar/son-7-gun-bekleyen")
+def son_7_gun_bekleyen_cagri_listesi(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return crud.get_son_7_gun_bekleyen_cagrilari(db)
+
 @app.get("/sonuc-secenekleri")
 def sonuc_secenekleri(
     db: Session = Depends(get_db),
