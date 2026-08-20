@@ -159,6 +159,7 @@ class YazarkasaCreate(BaseModel):
     bitis_tarihi: Optional[date] = None
     kayitli_tel_no: Optional[str] = None
     resmi_unvan: Optional[str] = None
+    notlar: Optional[str] = None
 
 
 class YazarkasaUpdate(BaseModel):
@@ -170,6 +171,7 @@ class YazarkasaUpdate(BaseModel):
     bitis_tarihi: Optional[date] = None
     kayitli_tel_no: Optional[str] = None
     resmi_unvan: Optional[str] = None
+    notlar: Optional[str] = None
 
 
 class YazarkasaResponse(BaseModel):
@@ -182,6 +184,7 @@ class YazarkasaResponse(BaseModel):
     bitis_tarihi: Optional[date] = None
     kayitli_tel_no: Optional[str] = None
     resmi_unvan: Optional[str] = None
+    notlar: Optional[str] = None
 
     class Config:
         from_attributes = True

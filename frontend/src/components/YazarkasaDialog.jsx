@@ -23,6 +23,7 @@ const bosForm = {
   bitis_tarihi: "",
   kayitli_tel_no: "",
   resmi_unvan:"",
+  notlar: "",
 };
 
 
@@ -91,6 +92,9 @@ function YazarKasaDialog({
         
         resmi_unvan:
           selectedYazarkasa.resmi_unvan || "",
+
+        notlar:
+          selectedYazarkasa.notlar || "",
           
 
       });
@@ -303,6 +307,9 @@ function YazarKasaDialog({
         form.kayitli_tel_no.trim() || null,
       resmi_unvan:
         form.resmi_unvan.trim() || null,
+
+      notlar:
+        form.notlar.trim() || null,
 
     });
 
@@ -674,6 +681,21 @@ function YazarKasaDialog({
               handleChange
             }
             fullWidth
+          />
+
+          {/* =================================================
+              NOTLAR
+          ================================================= */}
+
+          <TextField
+            label="Notlar"
+            name="notlar"
+            value={form.notlar}
+            onChange={handleChange}
+            fullWidth
+            multiline
+            minRows={3}
+            placeholder="Yazar kasa ile ilgili notları buraya yazabilirsiniz..."
           />
 
         </Box>

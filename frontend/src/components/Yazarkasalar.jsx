@@ -79,9 +79,15 @@ function Yazarkasalar() {
   // YETKİ
   // =========================================================
 
+  const normalizedRole =
+    (userRole || "")
+      .trim()
+      .toLocaleUpperCase("tr-TR");
+
   const canModify =
-    userRole === "ADMİN" ||
-    userRole === "DESTEK";
+    normalizedRole === "ADMİN" ||
+    normalizedRole === "ADMIN" ||
+    normalizedRole === "DESTEK";
 
 
   // =========================================================
@@ -548,6 +554,8 @@ function Yazarkasalar() {
 
             item.kayitli_tel_no,
 
+            item.notlar,
+
             getSubeAdi(
               item.sube_id
             ),
@@ -582,7 +590,7 @@ function Yazarkasalar() {
     <Paper
       elevation={0}
       sx={{
-        p: 4,
+        p: { xs: 2, sm: 2.5, md: 3 },
         width: "100%",
         maxWidth: "100%",
         minWidth: 0,
@@ -610,6 +618,7 @@ function Yazarkasalar() {
           flexWrap: "wrap",
           marginBottom: "24px",
           gap: "16px",
+          width: "100%",
         }}
       >
 
@@ -701,7 +710,7 @@ function Yazarkasalar() {
       <TextField
         fullWidth
         size="small"
-        placeholder="Müşteri, şube, resmi ünvan, marka, sicil no veya telefon ara..."
+        placeholder="Müşteri, şube, resmi ünvan, marka, sicil no, telefon veya not ara..."
         value={arama}
         onChange={(e) =>
           setArama(
@@ -710,7 +719,7 @@ function Yazarkasalar() {
         }
         sx={{
           mb: 3,
-          maxWidth: "600px",
+          maxWidth: "680px",
         }}
         slotProps={{
           input: {
@@ -753,9 +762,15 @@ function Yazarkasalar() {
       >
 
         <Table
+          size="small"
           sx={{
             minWidth: "1180px",
             width: "100%",
+            "& th, & td": {
+              px: 1.25,
+              py: 1.4,
+              fontSize: "0.86rem",
+            },
           }}
         >
 
@@ -787,8 +802,8 @@ function Yazarkasalar() {
                 sx={{
                   fontWeight: 600,
                   color: "#475569",
-                  minWidth: "220px",
-                  width: "260px",
+                  minWidth: "170px",
+                  width: "200px",
                 }}
               >
                 Resmi Ünvan
@@ -845,6 +860,18 @@ function Yazarkasalar() {
               </TableCell>
 
 
+              <TableCell
+                sx={{
+                  fontWeight: 600,
+                  color: "#475569",
+                  minWidth: "180px",
+                  width: "220px",
+                }}
+              >
+                Notlar
+              </TableCell>
+
+
               {canModify && (
 
                 <TableCell
@@ -852,7 +879,7 @@ function Yazarkasalar() {
                   sx={{
                     fontWeight: 600,
                     color: "#475569",
-                    width: "120px",
+                    width: "96px",
                   }}
                 >
                   İşlemler
@@ -910,9 +937,9 @@ function Yazarkasalar() {
                   <TableCell
                     sx={{
                       color: "#475569",
-                      minWidth: "220px",
-                      width: "260px",
-                      maxWidth: "300px",
+                      minWidth: "170px",
+                      width: "200px",
+                      maxWidth: "220px",
                       whiteSpace: "normal",
                       overflowWrap: "anywhere",
                       wordBreak: "break-word",
@@ -983,6 +1010,25 @@ function Yazarkasalar() {
                   >
                     {item.kayitli_tel_no ||
                       "-"}
+                  </TableCell>
+
+
+                  {/* NOTLAR */}
+
+                  <TableCell
+                    sx={{
+                      color: "#475569",
+                      minWidth: "180px",
+                      width: "220px",
+                      maxWidth: "240px",
+                      whiteSpace: "normal",
+                      overflowWrap: "anywhere",
+                      wordBreak: "break-word",
+                      lineHeight: 1.45,
+                      verticalAlign: "top",
+                    }}
+                  >
+                    {item.notlar || "-"}
                   </TableCell>
 
 
@@ -1094,8 +1140,8 @@ function Yazarkasalar() {
                 <TableCell
                   colSpan={
                     canModify
-                      ? 9
-                      : 8
+                      ? 10
+                      : 9
                   }
                   align="center"
                   sx={{

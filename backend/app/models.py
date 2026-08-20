@@ -129,6 +129,7 @@ class Yazarkasalar(Base):
         String(100),
         nullable=True
     )
+    notlar = Column(Text, nullable=True)
 
     sube = relationship(
         "Subeler",

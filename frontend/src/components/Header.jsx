@@ -278,15 +278,18 @@ function Header() {
               // =================================================
               // BİLDİRİM SÜRESİ
               //
-              // +1         = 1 Gün Kaldı
+              // +5 ... +1  = 5 / 4 / 3 / 2 / 1 Gün Kaldı
               //  0         = Bugün Bitiyor
-              // -1 ... -7  = Süresi Doldu
+              // -1 ... -7  = Bitti
               //
-              // 7 günden eski kayıt zil listesinde kalmaz.
+              // Bildirim 5 gün kala başlar.
+              // Kullanıcı "Gördüm" demezse gün geçtikçe
+              // 5 -> 4 -> 3 -> 2 -> 1 şeklinde güncellenir.
+              // Bittikten sonra 7 gün daha zil listesinde kalır.
               // =================================================
 
               if (
-                gunFarki > 1 ||
+                gunFarki > 5 ||
                 gunFarki < -7
               ) {
                 return null;
@@ -341,7 +344,7 @@ function Header() {
               if (gunFarki < 0) {
 
                 durum =
-                  "Süresi Doldu";
+                  "Bitti";
 
                 renk =
                   "#b91c1c";
@@ -367,11 +370,12 @@ function Header() {
               }
 
               else if (
-                gunFarki === 1
+                gunFarki >= 1 &&
+                gunFarki <= 5
               ) {
 
                 durum =
-                  "1 Gün Kaldı";
+                  `${gunFarki} Gün Kaldı`;
 
                 renk =
                   "#a16207";
@@ -420,11 +424,15 @@ function Header() {
                     return 0;
                   }
 
-                  if (fark === 1) {
-                    return 1;
+                  if (
+                    fark >= 1 &&
+                    fark <= 5
+                  ) {
+                    return fark;
                   }
 
-                  return 2 + Math.abs(fark);
+                  // Süresi geçenlerde en yeni biten üstte olsun.
+                  return 10 + Math.abs(fark);
 
                 };
 
@@ -507,7 +515,7 @@ function Header() {
 
 
   // =========================================================
-  // GÖRDÜM
+  // GÖRDÜM - BİTİŞ TARİHİ DEĞİŞMEDİKÇE TEKRAR GÖSTERME
   // =========================================================
 
   const handleBildirimGordum =
@@ -1010,7 +1018,7 @@ function Header() {
                           },
                         }}
                       >
-                        Okundu
+                        Gördüm
                       </Button>
 
                     </Box>

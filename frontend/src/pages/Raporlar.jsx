@@ -112,6 +112,7 @@ function Reports() {
     resmiUnvan: "",
     marka: "",
     sicilNo: "",
+    notlar: "",
     baslangic: "",
     bitis: "",
     bitisDurumu: "",
@@ -771,9 +772,10 @@ function Reports() {
     );
 
 
+    // Tarihi geçmiş yazarkasalar
     if (gunFarki < 0) {
       return {
-        label: "Süresi Doldu",
+        label: "Bitti",
         color: "#b91c1c",
         backgroundColor: "#fee2e2",
         rowBackground: "#fff7f7",
@@ -781,6 +783,7 @@ function Reports() {
     }
 
 
+    // Bugün biten yazarkasalar
     if (gunFarki === 0) {
       return {
         label: "Bugün Bitiyor",
@@ -791,9 +794,13 @@ function Reports() {
     }
 
 
-    if (gunFarki === 1) {
+    // 1 - 5 gün arasında kalan yazarkasalar
+    if (
+      gunFarki >= 1 &&
+      gunFarki <= 5
+    ) {
       return {
-        label: "1 Gün Kaldı",
+        label: `${gunFarki} Gün Kaldı`,
         color: "#a16207",
         backgroundColor: "#fef3c7",
         rowBackground: "#fffdf5",
@@ -918,6 +925,19 @@ function Reports() {
     }
 
 
+    if (yazarkasaFilters.notlar) {
+      const aranan = yazarkasaFilters.notlar
+        .trim()
+        .toLocaleLowerCase("tr-TR");
+
+      sonuc = sonuc.filter((item) =>
+        (item.notlar || "")
+          .toLocaleLowerCase("tr-TR")
+          .includes(aranan)
+      );
+    }
+
+
     if (yazarkasaFilters.baslangic) {
       sonuc = sonuc.filter(
         (item) =>
@@ -1025,6 +1045,7 @@ function Reports() {
       resmiUnvan: "",
       marka: "",
       sicilNo: "",
+      notlar: "",
       baslangic: "",
       bitis: "",
       bitisDurumu: "",
@@ -1057,6 +1078,7 @@ function Reports() {
       "Başlangıç Tarihi",
       "Bitiş Tarihi",
       "Kayıtlı Telefon",
+      "Notlar",
     ];
 
 
@@ -1073,6 +1095,7 @@ function Reports() {
         ? formatYazarkasaTarih(item.bitis_tarihi)
         : "",
       item.kayitli_tel_no || "",
+      item.notlar || "",
     ]);
 
 
@@ -2404,6 +2427,29 @@ function Reports() {
                     md: 4,
                   }}
                 >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Notlar"
+                    name="notlar"
+                    value={yazarkasaFilters.notlar}
+                    onChange={handleYazarkasaChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  />
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
                   <Typography
                     variant="caption"
                     sx={{
@@ -2640,7 +2686,7 @@ function Reports() {
               >
                 <Table
                   sx={{
-                    minWidth: "1250px",
+                    minWidth: "1480px",
                   }}
                 >
                   <TableHead
@@ -2721,6 +2767,17 @@ function Reports() {
                         }}
                       >
                         Kayıtlı Telefon
+                      </TableCell>
+
+                      <TableCell
+                        sx={{
+                          fontWeight: 700,
+                          color: "#475569",
+                          minWidth: "240px",
+                          width: "280px",
+                        }}
+                      >
+                        Notlar
                       </TableCell>
                     </TableRow>
                   </TableHead>
@@ -2880,13 +2937,30 @@ function Reports() {
                             >
                               {row.kayitli_tel_no || "-"}
                             </TableCell>
+
+
+                            <TableCell
+                              sx={{
+                                color: "#475569",
+                                minWidth: "240px",
+                                width: "280px",
+                                maxWidth: "320px",
+                                whiteSpace: "normal",
+                                overflowWrap: "anywhere",
+                                wordBreak: "break-word",
+                                lineHeight: 1.45,
+                                verticalAlign: "top",
+                              }}
+                            >
+                              {row.notlar || "-"}
+                            </TableCell>
                           </TableRow>
                         );
                       })
                     ) : (
                       <TableRow>
                         <TableCell
-                          colSpan={8}
+                          colSpan={9}
                           align="center"
                           sx={{
                             py: 4,
