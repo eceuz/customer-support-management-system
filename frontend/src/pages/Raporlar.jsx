@@ -1157,7 +1157,7 @@ function Reports() {
 
             <Tab label="Müşteriler & Şubeler" />
 
-            <Tab label="Yazarkasalar" />
+            <Tab label="Yazar Kasalar" />
           </Tabs>
         </Paper>
 
@@ -2595,7 +2595,7 @@ function Reports() {
                     color: "#334155",
                   }}
                 >
-                  Yazarkasa Listesi
+                  Yazar Kasa Listesi
                 </Typography>
 
 
@@ -2893,7 +2893,7 @@ function Reports() {
                             color: "#94a3b8",
                           }}
                         >
-                          Kriterlere uygun yazarkasa kaydı
+                          Kriterlere uygun yazar kasa kaydı
                           bulunamadı.
                         </TableCell>
                       </TableRow>

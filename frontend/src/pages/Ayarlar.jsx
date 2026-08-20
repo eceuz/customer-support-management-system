@@ -61,8 +61,8 @@ function Ayarlar() {
 
     {
       id: "yazarkasalar",
-      label: "Yazarkasalar",
-      desc: "Yazarkasa kayıtlarını yönetin",
+      label: "Yazar Kasalar",
+      desc: "Yazar kasa kayıtlarını yönetin",
       icon: <PointOfSaleIcon />
     }
 

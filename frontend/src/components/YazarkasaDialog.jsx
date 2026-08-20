@@ -330,7 +330,7 @@ function YazarKasaDialog({
             color: "#1e293b",
           }}
         >
-          Yazarkasa Kaydını Sil
+          Yazar Kasa Kaydını Sil
         </DialogTitle>
 
 
@@ -353,7 +353,7 @@ function YazarKasaDialog({
 
             {" "}
 
-            numaralı yazarkasa kaydını
+            numaralı yazar kasa kaydını
             silmek istediğinize emin misiniz?
 
           </Typography>
@@ -422,8 +422,8 @@ function YazarKasaDialog({
       >
 
         {mode === "edit"
-          ? "Yazarkasa Düzenle"
-          : "Yeni Yazarkasa"}
+          ? "Yazar Kasa Düzenle"
+          : "Yeni Yazar Kasa"}
 
       </DialogTitle>
 

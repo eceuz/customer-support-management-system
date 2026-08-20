@@ -137,14 +137,14 @@ function Yazarkasalar() {
     } catch (error) {
 
       console.error(
-        "Yazarkasa verileri yüklenemedi:",
+        "Yazar kasa verileri yüklenemedi:",
         error
       );
 
       setSnackbar({
         open: true,
         message:
-          "Yazarkasa kayıtları yüklenemedi.",
+          "Yazar kasa kayıtları yüklenemedi.",
         severity: "error",
       });
 
@@ -622,7 +622,7 @@ function Yazarkasalar() {
               color: "#1e293b",
             }}
           >
-            Yazarkasalar
+            Yazar Kasalar
           </Typography>
 
 
@@ -633,7 +633,7 @@ function Yazarkasalar() {
               mt: 0.5,
             }}
           >
-            Sistemdeki yazarkasa
+            Sistemdeki yazar kasa
             kayıtlarını buradan
             yönetebilirsiniz.
           </Typography>
@@ -664,7 +664,7 @@ function Yazarkasalar() {
               },
             }}
           >
-            Yeni Yazarkasa
+            Yeni Yazar Kasa
           </Button>
 
         )}
@@ -685,7 +685,7 @@ function Yazarkasalar() {
             borderRadius: "10px",
           }}
         >
-          Yazarkasa kayıtlarını
+          Yazar kasa kayıtlarını
           görüntüleyebilirsiniz.
           Ekleme, düzenleme ve
           silme yetkiniz bulunmamaktadır.
