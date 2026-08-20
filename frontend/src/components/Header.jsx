@@ -24,6 +24,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import DoneIcon from "@mui/icons-material/Done";
 
 import api from "../api/api";
 import { getYazarkasalar } from "../api/yazarkasaService";
@@ -32,33 +33,18 @@ import { getUserRole } from "../api/authService";
 
 function Header() {
 
-  // =========================================================
-  // KULLANICI MENÜSÜ
-  // =========================================================
-
   const [anchorEl, setAnchorEl] =
     useState(null);
-
-
-  // =========================================================
-  // BİLDİRİM MENÜSÜ
-  // =========================================================
 
   const [
     bildirimAnchorEl,
     setBildirimAnchorEl
   ] = useState(null);
 
-
   const [
     yazarkasaBildirimleri,
     setYazarkasaBildirimleri
   ] = useState([]);
-
-
-  // =========================================================
-  // PROFİL PENCERESİ
-  // =========================================================
 
   const [
     profilOpen,
@@ -71,7 +57,7 @@ function Header() {
 
 
   // =========================================================
-  // TOKEN / KULLANICI
+  // KULLANICI
   // =========================================================
 
   const token =
@@ -80,6 +66,9 @@ function Header() {
 
   let kullaniciAdi =
     "Kullanıcı";
+
+  let kullaniciId =
+    "bilinmeyen";
 
 
   if (token) {
@@ -93,6 +82,13 @@ function Header() {
       kullaniciAdi =
         decoded.username ||
         "Kullanıcı";
+
+
+      kullaniciId =
+        decoded.sub ||
+        decoded.kullanici_id ||
+        decoded.username ||
+        "bilinmeyen";
 
 
     } catch (err) {
@@ -120,35 +116,69 @@ function Header() {
 
 
   // =========================================================
-  // YAZARKASA BİLDİRİMLERİNİ YÜKLE
+  // GÖRÜLEN BİLDİRİMLER - KULLANICIYA ÖZEL
   // =========================================================
 
-  useEffect(() => {
+  const gorulenBildirimlerStorageKey =
+    `yazarkasa_gorulen_bildirimler_${kullaniciId}`;
 
-    if (!token) {
-      return;
+
+  const getGorulenBildirimler = () => {
+
+    try {
+
+      const kayit =
+        localStorage.getItem(
+          gorulenBildirimlerStorageKey
+        );
+
+
+      if (!kayit) {
+        return [];
+      }
+
+
+      const parsed =
+        JSON.parse(kayit);
+
+
+      return Array.isArray(parsed)
+        ? parsed
+        : [];
+
+
+    } catch (error) {
+
+      console.error(
+        "Görülen bildirimler okunamadı:",
+        error
+      );
+
+      return [];
+
     }
 
-
-    bildirimleriYukle();
-
-
-    const interval =
-      setInterval(() => {
-
-        bildirimleriYukle();
-
-      }, 60 * 60 * 1000);
-
-
-    return () =>
-      clearInterval(interval);
-
-  }, []);
+  };
 
 
   // =========================================================
-  // BİLDİRİMLER
+  // BİLDİRİM ANAHTARI
+  // Bitiş tarihi değişirse yeni bildirim tekrar çıkar.
+  // =========================================================
+
+  const getBildirimAnahtari =
+    (yazarkasa) => {
+
+      return (
+        `${yazarkasa.yazarkasa_id}_` +
+        `${yazarkasa.bitis_tarihi || "tarihsiz"}`
+      );
+
+    };
+
+
+  // =========================================================
+  // BİLDİRİMLERİ YÜKLE
   // =========================================================
 
   const bildirimleriYukle =
@@ -181,6 +211,10 @@ function Header() {
 
         const musteriler =
           musteriResponse.data || [];
+
+
+        const gorulenBildirimler =
+          getGorulenBildirimler();
 
 
         const bugun =
@@ -241,13 +275,36 @@ function Header() {
                 );
 
 
-              // Sadece:
-              // - süresi geçmiş
-              // - bugün biten
-              // - 1 gün kalan
-              // kayıtlar bildirim olur.
+              // =================================================
+              // BİLDİRİM SÜRESİ
+              //
+              // +1         = 1 Gün Kaldı
+              //  0         = Bugün Bitiyor
+              // -1 ... -7  = Süresi Doldu
+              //
+              // 7 günden eski kayıt zil listesinde kalmaz.
+              // =================================================
 
-              if (gunFarki > 1) {
+              if (
+                gunFarki > 1 ||
+                gunFarki < -7
+              ) {
+                return null;
+              }
+
+
+              const bildirimAnahtari =
+                getBildirimAnahtari(
+                  yazarkasa
+                );
+
+
+              // Daha önce "Gördüm" denmişse gösterme.
+              if (
+                gorulenBildirimler.includes(
+                  bildirimAnahtari
+                )
+              ) {
                 return null;
               }
 
@@ -281,10 +338,6 @@ function Header() {
               let arkaPlan = "";
 
 
-              // =================================================
-              // SÜRESİ DOLDU
-              // =================================================
-
               if (gunFarki < 0) {
 
                 durum =
@@ -297,11 +350,6 @@ function Header() {
                   "#fee2e2";
 
               }
-
-
-              // =================================================
-              // BUGÜN
-              // =================================================
 
               else if (
                 gunFarki === 0
@@ -317,11 +365,6 @@ function Header() {
                   "#ffedd5";
 
               }
-
-
-              // =================================================
-              // 1 GÜN
-              // =================================================
 
               else if (
                 gunFarki === 1
@@ -342,6 +385,8 @@ function Header() {
               return {
 
                 ...yazarkasa,
+
+                bildirimAnahtari,
 
                 musteri_adi:
                   musteri?.musteri_adi ||
@@ -368,43 +413,25 @@ function Header() {
 
             .sort((a, b) => {
 
-              // Önce bugün
-              if (
-                a.gunFarki === 0 &&
-                b.gunFarki !== 0
-              ) {
-                return -1;
-              }
+              const oncelik =
+                (fark) => {
 
+                  if (fark === 0) {
+                    return 0;
+                  }
 
-              if (
-                b.gunFarki === 0 &&
-                a.gunFarki !== 0
-              ) {
-                return 1;
-              }
+                  if (fark === 1) {
+                    return 1;
+                  }
 
+                  return 2 + Math.abs(fark);
 
-              // Sonra 1 gün kalan
-              if (
-                a.gunFarki === 1 &&
-                b.gunFarki < 0
-              ) {
-                return -1;
-              }
-
-
-              if (
-                b.gunFarki === 1 &&
-                a.gunFarki < 0
-              ) {
-                return 1;
-              }
+                };
 
 
               return (
-                b.gunFarki -
-                a.gunFarki
+                oncelik(a.gunFarki) -
+                oncelik(b.gunFarki)
               );
 
             });
@@ -428,7 +455,111 @@ function Header() {
 
 
   // =========================================================
-  // TARİH FORMAT
+  // SAYFA AÇILINCA + SAATLİK + ANLIK KONTROL
+  // =========================================================
+
+  useEffect(() => {
+
+    if (!token) {
+      return;
+    }
+
+
+    bildirimleriYukle();
+
+
+    const interval =
+      setInterval(() => {
+
+        bildirimleriYukle();
+
+      }, 60 * 60 * 1000);
+
+
+    // Yazarkasa ekranı kayıt eklediğinde / güncellediğinde /
+    // sildiğinde bu event'i yollar.
+    const handleYazarkasaGuncellendi =
+      () => {
+
+        bildirimleriYukle();
+
+      };
+
+
+    window.addEventListener(
+      "yazarkasa-guncellendi",
+      handleYazarkasaGuncellendi
+    );
+
+
+    return () => {
+
+      clearInterval(interval);
+
+      window.removeEventListener(
+        "yazarkasa-guncellendi",
+        handleYazarkasaGuncellendi
+      );
+
+    };
+
+  }, []);
+
+
+  // =========================================================
+  // GÖRDÜM
+  // =========================================================
+
+  const handleBildirimGordum =
+    (bildirim) => {
+
+      try {
+
+        const mevcut =
+          getGorulenBildirimler();
+
+
+        const yeniListe =
+          Array.from(
+            new Set([
+              ...mevcut,
+              bildirim.bildirimAnahtari,
+            ])
+          );
+
+
+        localStorage.setItem(
+          gorulenBildirimlerStorageKey,
+          JSON.stringify(
+            yeniListe
+          )
+        );
+
+
+        setYazarkasaBildirimleri(
+          (onceki) =>
+            onceki.filter(
+              (item) =>
+                item.bildirimAnahtari !==
+                bildirim.bildirimAnahtari
+            )
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Bildirim görüldü olarak işaretlenemedi:",
+          error
+        );
+
+      }
+
+    };
+
+
+  // =========================================================
+  // TARİH
   // =========================================================
 
   const formatTarih =
@@ -449,7 +580,7 @@ function Header() {
 
 
   // =========================================================
-  // KULLANICI MENÜSÜ
+  // MENÜLER
   // =========================================================
 
   const handleClick =
@@ -470,10 +601,6 @@ function Header() {
     };
 
 
-  // =========================================================
-  // PROFİL
-  // =========================================================
-
   const handleProfilOpen =
     () => {
 
@@ -492,10 +619,6 @@ function Header() {
     };
 
 
-  // =========================================================
-  // BİLDİRİM MENÜSÜ
-  // =========================================================
-
   const handleBildirimClick =
     (event) => {
 
@@ -509,9 +632,7 @@ function Header() {
   const handleBildirimClose =
     () => {
 
-      setBildirimAnchorEl(
-        null
-      );
+      setBildirimAnchorEl(null);
 
     };
 
@@ -532,25 +653,18 @@ function Header() {
     };
 
 
-  // =========================================================
-  // SAYFA
-  // =========================================================
-
   return (
 
     <header className="header">
 
-      {/* =====================================================
-          SOL
-      ====================================================== */}
+      {/* SOL */}
 
       <div className="header-left">
 
         <div
           className="logo-box"
           style={{
-            background:
-              "transparent",
+            background: "transparent",
             padding: 0,
           }}
         >
@@ -584,9 +698,7 @@ function Header() {
       </div>
 
 
-      {/* =====================================================
-          NAVİGASYON
-      ====================================================== */}
+      {/* NAVİGASYON */}
 
       <nav className="header-nav">
 
@@ -598,9 +710,7 @@ function Header() {
               : ""
           }
           onClick={() =>
-            navigate(
-              "/dashboard"
-            )
+            navigate("/dashboard")
           }
         >
           Ana Sayfa
@@ -615,9 +725,7 @@ function Header() {
               : ""
           }
           onClick={() =>
-            navigate(
-              "/raporlar"
-            )
+            navigate("/raporlar")
           }
         >
           Raporlar
@@ -632,9 +740,7 @@ function Header() {
               : ""
           }
           onClick={() =>
-            navigate(
-              "/ayarlar"
-            )
+            navigate("/ayarlar")
           }
         >
           Ayarlar
@@ -643,9 +749,7 @@ function Header() {
       </nav>
 
 
-      {/* =====================================================
-          SAĞ
-      ====================================================== */}
+      {/* SAĞ */}
 
       <div
         className="header-right"
@@ -656,9 +760,7 @@ function Header() {
         }}
       >
 
-        {/* ===================================================
-            BİLDİRİM ZİLİ
-        ==================================================== */}
+        {/* BİLDİRİM ZİLİ */}
 
         <IconButton
           onClick={
@@ -667,19 +769,12 @@ function Header() {
           sx={{
             width: "42px",
             height: "42px",
-
-            color:
-              "#475569",
-
-            backgroundColor:
-              "#f8fafc",
-
-            border:
-              "1px solid #e2e8f0",
+            color: "#475569",
+            backgroundColor: "#f8fafc",
+            border: "1px solid #e2e8f0",
 
             "&:hover": {
-              backgroundColor:
-                "#f1f5f9",
+              backgroundColor: "#f1f5f9",
             },
           }}
         >
@@ -699,9 +794,7 @@ function Header() {
         </IconButton>
 
 
-        {/* ===================================================
-            BİLDİRİM MENÜSÜ
-        ==================================================== */}
+        {/* BİLDİRİM MENÜSÜ */}
 
         <Menu
           anchorEl={
@@ -715,38 +808,21 @@ function Header() {
           }
           slotProps={{
             paper: {
-
               sx: {
-
-                width:
-                  "390px",
-
+                width: "390px",
                 maxWidth:
                   "calc(100vw - 32px)",
-
                 mt: 1,
-
-                borderRadius:
-                  "14px",
-
+                borderRadius: "14px",
                 border:
                   "1px solid #e2e8f0",
-
                 boxShadow:
                   "0 12px 32px rgba(15, 23, 42, 0.12)",
-
-                overflow:
-                  "hidden",
-
+                overflow: "hidden",
               },
-
             },
           }}
         >
-
-          {/* =================================================
-              BİLDİRİM YOK
-          ================================================= */}
 
           {yazarkasaBildirimleri.length ===
             0 && (
@@ -755,21 +831,15 @@ function Header() {
               sx={{
                 px: 3,
                 py: 4,
-                textAlign:
-                  "center",
+                textAlign: "center",
               }}
             >
 
               <Typography
                 sx={{
-                  color:
-                    "#64748b",
-
-                  fontSize:
-                    "14px",
-
-                  fontWeight:
-                    500,
+                  color: "#64748b",
+                  fontSize: "14px",
+                  fontWeight: 500,
                 }}
               >
                 Bildirim Yok.
@@ -780,20 +850,13 @@ function Header() {
           )}
 
 
-          {/* =================================================
-              BİLDİRİMLER
-          ================================================= */}
-
           {yazarkasaBildirimleri.length >
             0 && (
 
             <Box
               sx={{
-                maxHeight:
-                  "430px",
-
-                overflowY:
-                  "auto",
+                maxHeight: "430px",
+                overflowY: "auto",
               }}
             >
 
@@ -802,13 +865,11 @@ function Header() {
 
                   <Box
                     key={
-                      bildirim.yazarkasa_id
+                      bildirim.bildirimAnahtari
                     }
                     sx={{
                       px: 2.2,
-
                       py: 1.7,
-
                       borderBottom:
                         "1px solid #f1f5f9",
 
@@ -824,21 +885,14 @@ function Header() {
                     }}
                   >
 
-                    {/* DURUM */}
-
                     <Box
                       sx={{
-                        display:
-                          "flex",
-
+                        display: "flex",
                         justifyContent:
                           "space-between",
-
                         alignItems:
                           "center",
-
                         gap: 1,
-
                         mb: 1,
                       }}
                     >
@@ -849,23 +903,14 @@ function Header() {
                         }
                         size="small"
                         sx={{
-                          height:
-                            "23px",
-
-                          fontSize:
-                            "11px",
-
-                          fontWeight:
-                            700,
-
+                          height: "23px",
+                          fontSize: "11px",
+                          fontWeight: 700,
                           color:
                             bildirim.renk,
-
                           backgroundColor:
                             bildirim.arkaPlan,
-
-                          borderRadius:
-                            "6px",
+                          borderRadius: "6px",
                         }}
                       />
 
@@ -875,9 +920,7 @@ function Header() {
                         sx={{
                           color:
                             bildirim.renk,
-
-                          fontWeight:
-                            700,
+                          fontWeight: 700,
                         }}
                       >
                         {formatTarih(
@@ -888,18 +931,11 @@ function Header() {
                     </Box>
 
 
-                    {/* MÜŞTERİ */}
-
                     <Typography
                       sx={{
-                        color:
-                          "#1e293b",
-
-                        fontWeight:
-                          700,
-
-                        fontSize:
-                          "14px",
+                        color: "#1e293b",
+                        fontWeight: 700,
+                        fontSize: "14px",
                       }}
                     >
                       {
@@ -908,16 +944,10 @@ function Header() {
                     </Typography>
 
 
-                    {/* ŞUBE */}
-
                     <Typography
                       sx={{
-                        color:
-                          "#64748b",
-
-                        fontSize:
-                          "13px",
-
+                        color: "#64748b",
+                        fontSize: "13px",
                         mt: 0.2,
                       }}
                     >
@@ -928,29 +958,62 @@ function Header() {
                     </Typography>
 
 
-                    {/* YAZARKASA */}
-
                     <Typography
                       sx={{
-                        color:
-                          "#475569",
-
-                        fontSize:
-                          "12px",
-
+                        color: "#475569",
+                        fontSize: "12px",
                         mt: 0.7,
                       }}
                     >
-                      {bildirim.marka ||
-                        "-"}
+                      {bildirim.marka || "-"}
 
                       {" • "}
 
                       Sicil No:{" "}
 
-                      {bildirim.sicil_no ||
-                        "-"}
+                      {bildirim.sicil_no || "-"}
                     </Typography>
+
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent:
+                          "flex-end",
+                        mt: 1.2,
+                      }}
+                    >
+
+                      <Button
+                        size="small"
+                        startIcon={
+                          <DoneIcon />
+                        }
+                        onClick={() =>
+                          handleBildirimGordum(
+                            bildirim
+                          )
+                        }
+                        sx={{
+                          textTransform: "none",
+                          minWidth: "auto",
+                          px: 1.2,
+                          py: 0.4,
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#475569",
+
+                          "&:hover": {
+                            backgroundColor:
+                              "#f1f5f9",
+                          },
+                        }}
+                      >
+                        Okundu
+                      </Button>
+
+                    </Box>
 
                   </Box>
 
@@ -962,10 +1025,6 @@ function Header() {
           )}
 
 
-          {/* =================================================
-              RAPORLARA GİT
-          ================================================= */}
-
           {yazarkasaBildirimleri.length >
             0 && (
 
@@ -974,11 +1033,7 @@ function Header() {
               <Divider />
 
 
-              <Box
-                sx={{
-                  p: 1,
-                }}
-              >
+              <Box sx={{ p: 1 }}>
 
                 <MenuItem
                   onClick={() => {
@@ -993,18 +1048,10 @@ function Header() {
                   sx={{
                     justifyContent:
                       "center",
-
-                    borderRadius:
-                      "8px",
-
-                    color:
-                      "#2563eb",
-
-                    fontWeight:
-                      600,
-
-                    fontSize:
-                      "13px",
+                    borderRadius: "8px",
+                    color: "#2563eb",
+                    fontWeight: 600,
+                    fontSize: "13px",
                   }}
                 >
                   Raporlara Git
@@ -1019,9 +1066,7 @@ function Header() {
         </Menu>
 
 
-        {/* ===================================================
-            KULLANICI
-        ==================================================== */}
+        {/* KULLANICI */}
 
         <div
           className="user-info"
@@ -1036,11 +1081,9 @@ function Header() {
 
 
           <div>
-
             <p>
               {kullaniciAdi}
             </p>
-
           </div>
 
 
@@ -1050,10 +1093,6 @@ function Header() {
 
         </div>
 
-
-        {/* ===================================================
-            KULLANICI MENÜSÜ
-        ==================================================== */}
 
         <Menu
           anchorEl={
@@ -1074,9 +1113,7 @@ function Header() {
           >
 
             <PersonIcon
-              sx={{
-                mr: 1,
-              }}
+              sx={{ mr: 1 }}
             />
 
             Profil
@@ -1094,9 +1131,7 @@ function Header() {
           >
 
             <LogoutIcon
-              sx={{
-                mr: 1,
-              }}
+              sx={{ mr: 1 }}
             />
 
             Çıkış Yap
@@ -1106,9 +1141,7 @@ function Header() {
         </Menu>
 
 
-        {/* ===================================================
-            PROFİL PENCERESİ
-        ==================================================== */}
+        {/* PROFİL */}
 
         <Dialog
           open={
@@ -1121,20 +1154,15 @@ function Header() {
           maxWidth="xs"
           PaperProps={{
             sx: {
-              borderRadius:
-                "16px",
+              borderRadius: "16px",
             },
           }}
         >
 
           <DialogTitle
             sx={{
-              fontWeight:
-                700,
-
-              color:
-                "#1e293b",
-
+              fontWeight: 700,
+              color: "#1e293b",
               pb: 1,
             }}
           >
@@ -1146,41 +1174,23 @@ function Header() {
 
             <Box
               sx={{
-                display:
-                  "flex",
-
-                flexDirection:
-                  "column",
-
-                alignItems:
-                  "center",
-
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
                 pt: 2,
-
                 pb: 1,
               }}
             >
 
-              {/* PROFİL FOTOĞRAFI */}
-
               <Avatar
                 sx={{
-                  width:
-                    "72px",
-
-                  height:
-                    "72px",
-
+                  width: "72px",
+                  height: "72px",
                   mb: 2,
-
                   backgroundColor:
                     "#2563eb",
-
-                  fontSize:
-                    "28px",
-
-                  fontWeight:
-                    700,
+                  fontSize: "28px",
+                  fontWeight: 700,
                 }}
               >
 
@@ -1193,27 +1203,17 @@ function Header() {
               </Avatar>
 
 
-              {/* KULLANICI ADI */}
-
               <Typography
                 sx={{
-                  fontSize:
-                    "20px",
-
-                  fontWeight:
-                    700,
-
-                  color:
-                    "#1e293b",
-
+                  fontSize: "20px",
+                  fontWeight: 700,
+                  color: "#1e293b",
                   mb: 0.5,
                 }}
               >
                 {kullaniciAdi}
               </Typography>
 
-
-              {/* ROL */}
 
               <Chip
                 label={
@@ -1222,57 +1222,34 @@ function Header() {
                 size="small"
                 sx={{
                   mt: 0.5,
-
-                  fontWeight:
-                    700,
-
-                  color:
-                    "#1d4ed8",
-
+                  fontWeight: 700,
+                  color: "#1d4ed8",
                   backgroundColor:
                     "#eff6ff",
-
-                  borderRadius:
-                    "7px",
+                  borderRadius: "7px",
                 }}
               />
 
 
-              {/* BİLGİLER */}
-
               <Box
                 sx={{
-                  width:
-                    "100%",
-
+                  width: "100%",
                   mt: 3,
-
                   border:
                     "1px solid #e2e8f0",
-
-                  borderRadius:
-                    "12px",
-
-                  overflow:
-                    "hidden",
+                  borderRadius: "12px",
+                  overflow: "hidden",
                 }}
               >
 
                 <Box
                   sx={{
                     px: 2,
-
                     py: 1.5,
-
-                    display:
-                      "flex",
-
+                    display: "flex",
                     justifyContent:
                       "space-between",
-
-                    alignItems:
-                      "center",
-
+                    alignItems: "center",
                     borderBottom:
                       "1px solid #f1f5f9",
                   }}
@@ -1280,14 +1257,9 @@ function Header() {
 
                   <Typography
                     sx={{
-                      color:
-                        "#64748b",
-
-                      fontSize:
-                        "13px",
-
-                      fontWeight:
-                        600,
+                      color: "#64748b",
+                      fontSize: "13px",
+                      fontWeight: 600,
                     }}
                   >
                     Kullanıcı Adı
@@ -1296,14 +1268,9 @@ function Header() {
 
                   <Typography
                     sx={{
-                      color:
-                        "#1e293b",
-
-                      fontSize:
-                        "14px",
-
-                      fontWeight:
-                        600,
+                      color: "#1e293b",
+                      fontSize: "14px",
+                      fontWeight: 600,
                     }}
                   >
                     {kullaniciAdi}
@@ -1315,30 +1282,19 @@ function Header() {
                 <Box
                   sx={{
                     px: 2,
-
                     py: 1.5,
-
-                    display:
-                      "flex",
-
+                    display: "flex",
                     justifyContent:
                       "space-between",
-
-                    alignItems:
-                      "center",
+                    alignItems: "center",
                   }}
                 >
 
                   <Typography
                     sx={{
-                      color:
-                        "#64748b",
-
-                      fontSize:
-                        "13px",
-
-                      fontWeight:
-                        600,
+                      color: "#64748b",
+                      fontSize: "13px",
+                      fontWeight: 600,
                     }}
                   >
                     Rol
@@ -1347,14 +1303,9 @@ function Header() {
 
                   <Typography
                     sx={{
-                      color:
-                        "#1e293b",
-
-                      fontSize:
-                        "14px",
-
-                      fontWeight:
-                        600,
+                      color: "#1e293b",
+                      fontSize: "14px",
+                      fontWeight: 600,
                     }}
                   >
                     {kullaniciRol}
@@ -1382,17 +1333,10 @@ function Header() {
               }
               variant="contained"
               sx={{
-                textTransform:
-                  "none",
-
-                borderRadius:
-                  "10px",
-
-                fontWeight:
-                  600,
-
-                boxShadow:
-                  "none",
+                textTransform: "none",
+                borderRadius: "10px",
+                fontWeight: 600,
+                boxShadow: "none",
               }}
             >
               Kapat

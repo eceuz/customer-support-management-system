@@ -114,6 +114,7 @@ function Reports() {
     sicilNo: "",
     baslangic: "",
     bitis: "",
+    bitisDurumu: "",
   });
 
 
@@ -808,108 +809,30 @@ function Reports() {
 
   const yazarkasalariBitiseGoreSirala = (liste) => {
 
-    const bugun = new Date();
+    return [...liste].sort((a, b) => {
 
-    const bugunUTC = Date.UTC(
-      bugun.getFullYear(),
-      bugun.getMonth(),
-      bugun.getDate()
-    );
+      const tarihA = a.bitis_tarihi;
+      const tarihB = b.bitis_tarihi;
 
 
-    const gunFarkiBul = (bitisTarihi) => {
-
-      if (!bitisTarihi) {
-        return null;
+      if (!tarihA && !tarihB) {
+        return 0;
       }
 
 
-      const [yil, ay, gun] =
-        bitisTarihi
-          .split("-")
-          .map(Number);
-
-
-      const bitisUTC = Date.UTC(
-        yil,
-        ay - 1,
-        gun
-      );
-
-
-      return Math.round(
-        (bitisUTC - bugunUTC) /
-        (1000 * 60 * 60 * 24)
-      );
-
-    };
-
-
-    return [...liste].sort(
-      (a, b) => {
-
-        const farkA =
-          gunFarkiBul(
-            a.bitis_tarihi
-          );
-
-        const farkB =
-          gunFarkiBul(
-            b.bitis_tarihi
-          );
-
-
-        if (
-          farkA === null &&
-          farkB === null
-        ) {
-          return 0;
-        }
-
-
-        if (farkA === null) {
-          return 1;
-        }
-
-        if (farkB === null) {
-          return -1;
-        }
-
-
-        const aktifA =
-          farkA >= 0;
-
-        const aktifB =
-          farkB >= 0;
-
-
-        if (
-          aktifA &&
-          !aktifB
-        ) {
-          return -1;
-        }
-
-        if (
-          !aktifA &&
-          aktifB
-        ) {
-          return 1;
-        }
-
-
-        if (
-          aktifA &&
-          aktifB
-        ) {
-          return farkA - farkB;
-        }
-
-
-        return farkB - farkA;
-
+      if (!tarihA) {
+        return 1;
       }
-    );
+
+
+      if (!tarihB) {
+        return -1;
+      }
+
+
+      return tarihA.localeCompare(tarihB);
+
+    });
 
   };
 
@@ -1013,6 +936,80 @@ function Reports() {
     }
 
 
+    if (yazarkasaFilters.bitisDurumu) {
+
+      const bugun = new Date();
+
+      const bugunUTC = Date.UTC(
+        bugun.getFullYear(),
+        bugun.getMonth(),
+        bugun.getDate()
+      );
+
+
+      sonuc = sonuc.filter((item) => {
+
+        if (!item.bitis_tarihi) {
+          return false;
+        }
+
+
+        const [yil, ay, gun] =
+          item.bitis_tarihi
+            .split("-")
+            .map(Number);
+
+
+        const bitisUTC = Date.UTC(
+          yil,
+          ay - 1,
+          gun
+        );
+
+
+        const gunFarki = Math.round(
+          (bitisUTC - bugunUTC) /
+          (1000 * 60 * 60 * 24)
+        );
+
+
+        // Bitiş tarihi geçmiş kayıtlar
+        if (
+          yazarkasaFilters.bitisDurumu ===
+          "tarihiGecmis"
+        ) {
+          return gunFarki < 0;
+        }
+
+
+        // Bugün dahil önümüzdeki 30 gün içinde bitecek kayıtlar
+        if (
+          yazarkasaFilters.bitisDurumu ===
+          "yaklasan"
+        ) {
+          return (
+            gunFarki >= 0 &&
+            gunFarki <= 30
+          );
+        }
+
+
+        // 30 günden daha uzun süresi olan kayıtlar
+        if (
+          yazarkasaFilters.bitisDurumu ===
+          "aktif"
+        ) {
+          return gunFarki > 30;
+        }
+
+
+        return true;
+
+      });
+
+    }
+
+
     setFiltrelenmisYazarkasalar(
       yazarkasalariBitiseGoreSirala(
         sonuc
@@ -1030,6 +1027,7 @@ function Reports() {
       sicilNo: "",
       baslangic: "",
       bitis: "",
+      bitisDurumu: "",
     });
 
     setFiltrelenmisYazarkasalar(
@@ -2466,6 +2464,46 @@ function Reports() {
                       },
                     }}
                   />
+                </Grid>
+
+
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
+                  <TextField
+                    select
+                    fullWidth
+                    size="small"
+                    label="Bitiş Durumu"
+                    name="bitisDurumu"
+                    value={yazarkasaFilters.bitisDurumu}
+                    onChange={handleYazarkasaChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  >
+                    <MenuItem value="">
+                      Tümü
+                    </MenuItem>
+
+                    <MenuItem value="tarihiGecmis">
+                      Tarihi Geçmiş
+                    </MenuItem>
+
+                    <MenuItem value="yaklasan">
+                      Yaklaşan (30 Gün İçinde)
+                    </MenuItem>
+
+                    <MenuItem value="aktif">
+                      Aktif
+                    </MenuItem>
+                  </TextField>
                 </Grid>
 
 

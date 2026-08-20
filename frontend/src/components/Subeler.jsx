@@ -37,6 +37,8 @@ import { canModify } from "../api/authService";
 
 
 function Subeler() {
+  const kullaniciDegistirebilir = canModify();
+
   const [subeler, setSubeler] = useState([]);
   const [musteriler, setMusteriler] = useState([]);
   const [arama, setArama] = useState("");
@@ -279,24 +281,40 @@ function Subeler() {
           </Typography>
         </div>
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleYeni}
+        {kullaniciDegistirebilir && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleYeni}
+            sx={{
+              borderRadius: "10px",
+              textTransform: "none",
+              fontWeight: 600,
+              boxShadow: "none",
+              "&:hover": {
+                boxShadow:
+                  "0px 4px 12px rgba(25, 118, 210, 0.2)",
+              },
+            }}
+          >
+            Yeni Şube
+          </Button>
+        )}
+      </div>
+
+
+      {!kullaniciDegistirebilir && (
+        <Alert
+          severity="info"
           sx={{
+            mb: 3,
             borderRadius: "10px",
-            textTransform: "none",
-            fontWeight: 600,
-            boxShadow: "none",
-            "&:hover": {
-              boxShadow:
-                "0px 4px 12px rgba(25, 118, 210, 0.2)",
-            },
           }}
         >
-          Yeni Şube
-        </Button>
-      </div>
+          Şube kayıtlarını görüntüleyebilirsiniz. Ekleme, düzenleme ve silme
+          yetkiniz bulunmamaktadır.
+        </Alert>
+      )}
 
 
       {/* Arama Çubuğu */}
@@ -370,16 +388,18 @@ function Subeler() {
                 Telefon Destek Anlaşması
               </TableCell>
 
-              <TableCell
-                align="center"
-                sx={{
-                  fontWeight: 600,
-                  color: "#475569",
-                  width: "120px",
-                }}
-              >
-                İşlemler
-              </TableCell>
+              {kullaniciDegistirebilir && (
+                <TableCell
+                  align="center"
+                  sx={{
+                    fontWeight: 600,
+                    color: "#475569",
+                    width: "120px",
+                  }}
+                >
+                  İşlemler
+                </TableCell>
+              )}
             </TableRow>
           </TableHead>
 
@@ -445,63 +465,65 @@ function Subeler() {
                     </span>
                   </TableCell>
 
-                  <TableCell align="center">
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "6px",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Tooltip
-                        title="Düzenle"
-                        arrow
+                  {kullaniciDegistirebilir && (
+                    <TableCell align="center">
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: "6px",
+                          alignItems: "center",
+                        }}
                       >
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          onClick={() =>
-                            handleEdit(sube)
-                          }
-                          sx={{
-                            backgroundColor:
-                              "rgba(25, 118, 210, 0.04)",
-                            "&:hover": {
-                              backgroundColor:
-                                "rgba(25, 118, 210, 0.12)",
-                            },
-                          }}
+                        <Tooltip
+                          title="Düzenle"
+                          arrow
                         >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                          <IconButton
+                            color="primary"
+                            size="small"
+                            onClick={() =>
+                              handleEdit(sube)
+                            }
+                            sx={{
+                              backgroundColor:
+                                "rgba(25, 118, 210, 0.04)",
+                              "&:hover": {
+                                backgroundColor:
+                                  "rgba(25, 118, 210, 0.12)",
+                              },
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
 
 
-                      <Tooltip
-                        title="Sil"
-                        arrow
-                      >
-                        <IconButton
-                          color="error"
-                          size="small"
-                          onClick={() =>
-                            handleDeleteClick(sube)
-                          }
-                          sx={{
-                            backgroundColor:
-                              "rgba(211, 47, 47, 0.04)",
-                            "&:hover": {
-                              backgroundColor:
-                                "rgba(211, 47, 47, 0.12)",
-                            },
-                          }}
+                        <Tooltip
+                          title="Sil"
+                          arrow
                         >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
-                  </TableCell>
+                          <IconButton
+                            color="error"
+                            size="small"
+                            onClick={() =>
+                              handleDeleteClick(sube)
+                            }
+                            sx={{
+                              backgroundColor:
+                                "rgba(211, 47, 47, 0.04)",
+                              "&:hover": {
+                                backgroundColor:
+                                  "rgba(211, 47, 47, 0.12)",
+                              },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               );
             })}
@@ -510,7 +532,7 @@ function Subeler() {
             {filtreliSubeler.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={kullaniciDegistirebilir ? 5 : 4}
                   align="center"
                   sx={{
                     py: 6,

@@ -36,6 +36,8 @@ import { canModify } from "../api/authService";
 
 
 function Musteriler() {
+  const kullaniciDegistirebilir = canModify();
+
   const [musteriler, setMusteriler] = useState([]);
   const [arama, setArama] = useState("");
 
@@ -257,24 +259,40 @@ function Musteriler() {
           </Typography>
         </div>
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleYeni}
+        {kullaniciDegistirebilir && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleYeni}
+            sx={{
+              borderRadius: "10px",
+              textTransform: "none",
+              fontWeight: 600,
+              boxShadow: "none",
+              "&:hover": {
+                boxShadow:
+                  "0px 4px 12px rgba(25, 118, 210, 0.2)",
+              },
+            }}
+          >
+            Yeni Müşteri
+          </Button>
+        )}
+      </div>
+
+
+      {!kullaniciDegistirebilir && (
+        <Alert
+          severity="info"
           sx={{
+            mb: 3,
             borderRadius: "10px",
-            textTransform: "none",
-            fontWeight: 600,
-            boxShadow: "none",
-            "&:hover": {
-              boxShadow:
-                "0px 4px 12px rgba(25, 118, 210, 0.2)",
-            },
           }}
         >
-          Yeni Müşteri
-        </Button>
-      </div>
+          Müşteri kayıtlarını görüntüleyebilirsiniz. Ekleme, düzenleme ve silme
+          yetkiniz bulunmamaktadır.
+        </Alert>
+      )}
 
 
       {/* Arama Çubuğu */}
@@ -330,16 +348,18 @@ function Musteriler() {
                 Müşteri Adı
               </TableCell>
 
-              <TableCell
-                align="center"
-                sx={{
-                  fontWeight: 600,
-                  color: "#475569",
-                  width: "120px",
-                }}
-              >
-                İşlemler
-              </TableCell>
+              {kullaniciDegistirebilir && (
+                <TableCell
+                  align="center"
+                  sx={{
+                    fontWeight: 600,
+                    color: "#475569",
+                    width: "120px",
+                  }}
+                >
+                  İşlemler
+                </TableCell>
+              )}
             </TableRow>
           </TableHead>
 
@@ -369,65 +389,67 @@ function Musteriler() {
                     {musteri.musteri_adi}
                   </TableCell>
 
-                  <TableCell align="center">
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "6px",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Tooltip
-                        title="Düzenle"
-                        arrow
+                  {kullaniciDegistirebilir && (
+                    <TableCell align="center">
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: "6px",
+                          alignItems: "center",
+                        }}
                       >
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          onClick={() =>
-                            handleEdit(musteri)
-                          }
-                          sx={{
-                            backgroundColor:
-                              "rgba(25, 118, 210, 0.04)",
-                            "&:hover": {
-                              backgroundColor:
-                                "rgba(25, 118, 210, 0.12)",
-                            },
-                          }}
+                        <Tooltip
+                          title="Düzenle"
+                          arrow
                         >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                          <IconButton
+                            color="primary"
+                            size="small"
+                            onClick={() =>
+                              handleEdit(musteri)
+                            }
+                            sx={{
+                              backgroundColor:
+                                "rgba(25, 118, 210, 0.04)",
+                              "&:hover": {
+                                backgroundColor:
+                                  "rgba(25, 118, 210, 0.12)",
+                              },
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
 
 
-                      <Tooltip
-                        title="Sil"
-                        arrow
-                      >
-                        <IconButton
-                          color="error"
-                          size="small"
-                          onClick={() =>
-                            handleDeleteClick(
-                              musteri
-                            )
-                          }
-                          sx={{
-                            backgroundColor:
-                              "rgba(211, 47, 47, 0.04)",
-                            "&:hover": {
-                              backgroundColor:
-                                "rgba(211, 47, 47, 0.12)",
-                            },
-                          }}
+                        <Tooltip
+                          title="Sil"
+                          arrow
                         >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
-                  </TableCell>
+                          <IconButton
+                            color="error"
+                            size="small"
+                            onClick={() =>
+                              handleDeleteClick(
+                                musteri
+                              )
+                            }
+                            sx={{
+                              backgroundColor:
+                                "rgba(211, 47, 47, 0.04)",
+                              "&:hover": {
+                                backgroundColor:
+                                  "rgba(211, 47, 47, 0.12)",
+                              },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               )
             )}
@@ -436,7 +458,7 @@ function Musteriler() {
             {filtreliMusteriler.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={3}
+                  colSpan={kullaniciDegistirebilir ? 3 : 2}
                   align="center"
                   sx={{
                     py: 6,

@@ -176,7 +176,7 @@ function CallForm({
 
 
   const rol = getUserRole();
-  const izleyiciMi = rol === "izleyici";
+  const izleyiciMi = rol === "İZLEYİCİ";
 
 
   // =========================================================
@@ -810,14 +810,14 @@ function CallForm({
       {izleyiciMi && (
 
         <Alert
-          severity="warning"
+          severity="info"
           sx={{
             mb: 2,
+            borderRadius: "10px",
           }}
         >
-          Çağrı kayıtlarını görüntüleyebilirsiniz ancak yeni
-          kayıt oluşturma veya mevcut kayıtları değiştirme
-          yetkiniz bulunmuyor.
+          Destek kayıtlarını görüntüleyebilirsiniz. Yeni destek kaydı oluşturma
+          veya mevcut kayıtları değiştirme yetkiniz bulunmamaktadır.
         </Alert>
 
       )}
@@ -1226,22 +1226,23 @@ function CallForm({
           }}
         >
 
-          <Button
-            variant="contained"
-            className="save-button"
-            color={
-              selectedCall
-                ? "warning"
-                : "primary"
-            }
-            onClick={handleSave}
-            fullWidth
-            disabled={izleyiciMi}
-          >
-            {selectedCall
-              ? "Güncellemeyi Kaydet"
-              : "Kaydı Kaydet"}
-          </Button>
+          {!izleyiciMi && (
+            <Button
+              variant="contained"
+              className="save-button"
+              color={
+                selectedCall
+                  ? "warning"
+                  : "primary"
+              }
+              onClick={handleSave}
+              fullWidth
+            >
+              {selectedCall
+                ? "Güncellemeyi Kaydet"
+                : "Kaydı Kaydet"}
+            </Button>
+          )}
 
 
           {selectedCall && (

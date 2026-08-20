@@ -395,6 +395,11 @@ function Yazarkasalar() {
 
       await loadData();
 
+      // Header bildirimlerini anında yenile.
+      window.dispatchEvent(
+        new Event("yazarkasa-guncellendi")
+      );
+
 
     } catch (error) {
 
@@ -450,6 +455,11 @@ function Yazarkasalar() {
 
       await loadData();
 
+      // Header bildirimlerini anında yenile.
+      window.dispatchEvent(
+        new Event("yazarkasa-guncellendi")
+      );
+
 
     } catch (error) {
 
@@ -472,53 +482,94 @@ function Yazarkasalar() {
   };
 
 
+
+  // =========================================================
+  // BİTİŞ TARİHİNE GÖRE SIRALA
+  // Aktif kayıtlar: bugün -> yarın -> ileri tarihler
+  // Süresi dolanlar daha sonra, bitiş tarihi olmayanlar en altta
+  // =========================================================
+
+  const yazarkasalariBitiseGoreSirala = (liste) => {
+
+    return [...liste].sort((a, b) => {
+
+      const tarihA = a.bitis_tarihi;
+      const tarihB = b.bitis_tarihi;
+
+
+      if (!tarihA && !tarihB) {
+        return 0;
+      }
+
+
+      if (!tarihA) {
+        return 1;
+      }
+
+
+      if (!tarihB) {
+        return -1;
+      }
+
+
+      // YYYY-MM-DD formatında küçükten büyüğe:
+      // en erken bitiş tarihi en üstte.
+      return tarihA.localeCompare(tarihB);
+
+    });
+
+  };
+
+
   // =========================================================
   // ARAMA
   // =========================================================
 
   const filtreliYazarkasalar =
-    yazarkasalar.filter(
-      (item) => {
+    yazarkasalariBitiseGoreSirala(
+      yazarkasalar.filter(
+        (item) => {
 
-        const search =
-          arama
-            .trim()
+          const search =
+            arama
+              .trim()
+              .toLocaleLowerCase(
+                "tr-TR"
+              );
+
+
+          const aranacakMetin = [
+
+            item.marka,
+
+            item.resmi_unvan,
+
+            item.sicil_no,
+
+            item.kayitli_tel_no,
+
+            getSubeAdi(
+              item.sube_id
+            ),
+
+            getMusteriAdi(
+              item.sube_id
+            ),
+
+          ]
+            .filter(Boolean)
+            .join(" ")
             .toLocaleLowerCase(
               "tr-TR"
             );
 
 
-        const aranacakMetin = [
-
-          item.marka,
-
-          item.resmi_unvan,
-
-          item.sicil_no,
-
-          item.kayitli_tel_no,
-
-          getSubeAdi(
-            item.sube_id
-          ),
-
-          getMusteriAdi(
-            item.sube_id
-          ),
-
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLocaleLowerCase(
-            "tr-TR"
+          return aranacakMetin.includes(
+            search
           );
 
-
-        return aranacakMetin.includes(
-          search
-        );
-
-      }
+        }
+      )
     );
 
 
