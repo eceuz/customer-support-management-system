@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import "../styles/statisticsCards.css";
 
-import { getSon24SaatCagriListesi } from "../api/cagriService";
+import {
+    getSon24SaatCagriListesi,
+    getSon7GunBekleyenCagriListesi
+} from "../api/cagriService";
 
 
 function StatisticsCards({
@@ -45,14 +48,31 @@ function StatisticsCards({
 
             try {
 
-                const response =
-                    await getSon24SaatCagriListesi();
+                const [
+                    son24SaatResponse,
+                    son7GunBekleyenResponse
+                ] = await Promise.all([
+
+                    getSon24SaatCagriListesi(),
+
+                    getSon7GunBekleyenCagriListesi()
+
+                ]);
+
 
                 const cagrilar =
-                    response.data || [];
+                    son24SaatResponse.data || [];
 
 
+                const bekleyenCagrilar =
+                    son7GunBekleyenResponse.data || [];
+
+
+                // =================================================
                 // BUGÜN
+                // Son 24 saat verisinden sadece bugünün kayıtları
+                // =================================================
+
                 const bugun = new Date();
 
                 const bugunSayisi =
@@ -79,16 +99,24 @@ function StatisticsCards({
                     }).length;
 
 
+                // =================================================
                 // BEKLEYEN
+                // SADECE SON 7 GÜNDEKİ BEKLEYEN ÇAĞRILAR
+                // =================================================
+
                 const bekleyenSayisi =
-                    cagrilar.filter(
+                    bekleyenCagrilar.filter(
                         (item) =>
                             item.sonuc ===
                             "Beklemede"
                     ).length;
 
 
+                // =================================================
                 // SERVİSE AKTARILAN
+                // Son 24 saat
+                // =================================================
+
                 const serviseAktarilanSayisi =
                     cagrilar.filter(
                         (item) =>
@@ -97,7 +125,11 @@ function StatisticsCards({
                     ).length;
 
 
+                // =================================================
                 // ÇÖZÜLEN
+                // Son 24 saat
+                // =================================================
+
                 const cozulenSayisi =
                     cagrilar.filter(
                         (item) =>
