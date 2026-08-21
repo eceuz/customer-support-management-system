@@ -570,7 +570,10 @@ def get_son_7_gun_bekleyen_cagrilari(db: Session):
         .all()
     )
 
-    return sonuc
+    return [
+    dict(row._mapping)
+    for row in sonuc
+]
 
 # =========================================================
 # YAZARKASA İŞLEMLERİ
