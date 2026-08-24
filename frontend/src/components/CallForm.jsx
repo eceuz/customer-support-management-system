@@ -388,6 +388,11 @@ function CallForm({
     const seciliAriza =
       arizaTipleri.find(
         (a) =>
+          Number(a.ariza_tipi_id) ===
+          Number(selectedCall.ariza_tipi_id)
+      ) ||
+      arizaTipleri.find(
+        (a) =>
           a.ariza_tipi_adi ===
           selectedCall.ariza_tipi_adi
       );
@@ -402,16 +407,18 @@ function CallForm({
     // MÜŞTERİ VE ŞUBE
     // =====================================================
 
-    if (
-      selectedCall.musteri_adi &&
-      musteriler.length > 0
-    ) {
+    if (musteriler.length > 0) {
 
       const seciliMusteri =
         musteriler.find(
           (m) =>
-            m.musteri_id ===
-            selectedCall.musteri_id
+            Number(m.musteri_id) ===
+            Number(selectedCall.musteri_id)
+        ) ||
+        musteriler.find(
+          (m) =>
+            m.musteri_adi ===
+            selectedCall.musteri_adi
         );
 
 
@@ -425,11 +432,19 @@ function CallForm({
         )
           .then((res) => {
 
-            setSubeler(res.data);
+            const gelenSubeler =
+              res.data || [];
+
+            setSubeler(gelenSubeler);
 
 
             const seciliSube =
-              res.data.find(
+              gelenSubeler.find(
+                (s) =>
+                  Number(s.sube_id) ===
+                  Number(selectedCall.sube_id)
+              ) ||
+              gelenSubeler.find(
                 (s) =>
                   s.sube_adi ===
                   selectedCall.sube_adi
@@ -442,7 +457,10 @@ function CallForm({
 
           })
           .catch((err) =>
-            console.error(err)
+            console.error(
+              "Şubeler alınamadı:",
+              err
+            )
           );
 
       }

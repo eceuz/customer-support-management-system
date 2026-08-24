@@ -441,6 +441,7 @@ def delete_cagri(
 
     return True 
 
+
 def get_son_24_saat_cagrilari(db: Session):
 
     yirmi_dort_saat_once = (
@@ -455,18 +456,22 @@ def get_son_24_saat_cagrilari(db: Session):
             models.CagriKayitlari.gorusulen_kisi,
             models.CagriKayitlari.yapilanlar,
             models.CagriKayitlari.sonuc,
+            models.CagriKayitlari.kullanici_id,
 
+            models.Musteriler.musteri_id.label("musteri_id"),
             models.Musteriler.musteri_adi.label("musteri_adi"),
 
+            models.Subeler.sube_id.label("sube_id"),
             models.Subeler.sube_adi.label("sube_adi"),
 
+            models.ArizaTipleri.ariza_tipi_id.label("ariza_tipi_id"),
             models.ArizaTipleri.ariza_tipi_adi.label("ariza_tipi_adi"),
 
             models.Kullanicilar.kullanici_adi.label("kullanici_adi"),
 
             models.Subeler.bakim_anlasmasi_var_mi.label(
                 "bakim_anlasmasi_var_mi"
-            )
+            ),
         )
 
         .join(
@@ -502,7 +507,10 @@ def get_son_24_saat_cagrilari(db: Session):
         .all()
     )
 
-    return sonuc
+    return [
+        dict(row._mapping)
+        for row in sonuc
+    ]
 
 def get_son_7_gun_bekleyen_cagrilari(db: Session):
 
