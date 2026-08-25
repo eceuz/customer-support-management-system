@@ -31,3 +31,7 @@ export const getSon7GunBekleyenCagriListesi = async () => {
 export const getSonucSecenekleri = () => {
     return api.get("/sonuc-secenekleri");
 };
+
+export const getGorusulenKisiler = (subeId) => {
+    return api.get(`/cagrilar/gorusulen-kisiler?sube_id=${subeId}`);
+};

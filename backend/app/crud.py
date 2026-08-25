@@ -701,3 +701,81 @@ def delete_yazarkasa(
     db.commit()
 
     return True
+
+def get_gorusulen_kisiler(
+    db: Session,
+    sube_id: int
+):
+
+    kayitlar = (
+        db.query(
+            models.CagriKayitlari.gorusulen_kisi,
+            models.CagriKayitlari.telefon,
+            models.CagriKayitlari.tarih,
+            models.CagriKayitlari.cagri_kaydi_id
+        )
+        .filter(
+            models.CagriKayitlari.sube_id == sube_id,
+            models.CagriKayitlari.gorusulen_kisi.isnot(None),
+            func.trim(
+                models.CagriKayitlari.gorusulen_kisi
+            ) != ""
+        )
+        .order_by(
+            models.CagriKayitlari.tarih.desc(),
+            models.CagriKayitlari.cagri_kaydi_id.desc()
+        )
+        .all()
+    )
+
+
+    kisiler = {}
+    siralama = []
+
+
+    for kayit in kayitlar:
+
+        kisi_adi = " ".join(
+            (kayit.gorusulen_kisi or "")
+            .strip()
+            .split()
+        )
+
+        if not kisi_adi:
+            continue
+
+
+        anahtar = kisi_adi.casefold()
+
+
+        telefon = (
+            (kayit.telefon or "")
+            .strip()
+            or None
+        )
+
+
+        if anahtar not in kisiler:
+
+            kisiler[anahtar] = {
+                "gorusulen_kisi": kisi_adi,
+                "telefon": telefon
+            }
+
+            siralama.append(
+                anahtar
+            )
+
+
+        elif (
+            not kisiler[anahtar]["telefon"]
+            and telefon
+        ):
+
+            kisiler[anahtar]["telefon"] = telefon
+
+
+    return [
+        kisiler[anahtar]
+        for anahtar in siralama
+    ]

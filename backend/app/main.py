@@ -584,3 +584,14 @@ def yazarkasa_sil(
     return {
         "message": "Yazarkasa kaydı silindi."
     }
+
+@app.get("/cagrilar/gorusulen-kisiler")
+def gorusulen_kisileri_getir(
+    sube_id: int = Query(...),
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(get_current_user)
+):
+    return crud.get_gorusulen_kisiler(
+        db,
+        sube_id
+    )

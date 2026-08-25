@@ -20,6 +20,7 @@ import {
   createCagri,
   updateCagri,
   getSonucSecenekleri,
+  getGorusulenKisiler,
 } from "../api/cagriService";
 
 import {
@@ -154,6 +155,7 @@ function CallForm({
 
   const [telefon, setTelefon] = useState("");
   const [gorusulenKisi, setGorusulenKisi] = useState("");
+  const [gorusulenKisiler, setGorusulenKisiler] = useState([]);
   const [yapilanlar, setYapilanlar] = useState("");
 
   // SONUÇ
@@ -268,6 +270,58 @@ function CallForm({
 
 
   // =========================================================
+  // SEÇİLEN ŞUBENİN DAHA ÖNCE GÖRÜŞÜLEN KİŞİLERİNİ YÜKLE
+  // =========================================================
+
+  useEffect(() => {
+
+    if (!sube?.sube_id) {
+      setGorusulenKisiler([]);
+      return;
+    }
+
+    let aktif = true;
+
+    const loadGorusulenKisiler = async () => {
+
+      try {
+
+        const response =
+          await getGorusulenKisiler(
+            sube.sube_id
+          );
+
+        if (aktif) {
+          setGorusulenKisiler(
+            response.data || []
+          );
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Görüşülen kişiler alınamadı:",
+          error
+        );
+
+        if (aktif) {
+          setGorusulenKisiler([]);
+        }
+
+      }
+
+    };
+
+    loadGorusulenKisiler();
+
+    return () => {
+      aktif = false;
+    };
+
+  }, [sube?.sube_id]);
+
+
+  // =========================================================
   // DÜZENLENECEK ÇAĞRIYI FORMA YÜKLE
   // =========================================================
 
@@ -292,6 +346,7 @@ function CallForm({
       );
 
       setSubeler([]);
+      setGorusulenKisiler([]);
 
       return;
     }
@@ -499,6 +554,7 @@ function CallForm({
     );
 
     setSubeler([]);
+    setGorusulenKisiler([]);
 
   };
 
@@ -943,6 +999,9 @@ function CallForm({
 
             setMusteri(value);
             setSube(null);
+            setGorusulenKisiler([]);
+            setGorusulenKisi("");
+            setTelefon("");
 
 
             if (!value) {
@@ -1000,9 +1059,14 @@ function CallForm({
             option.sube_id ===
             value.sube_id
           }
-          onChange={(e, value) =>
-            setSube(value)
-          }
+          onChange={(e, value) => {
+
+            setSube(value);
+            setGorusulenKisiler([]);
+            setGorusulenKisi("");
+            setTelefon("");
+
+          }}
           renderInput={(params) => (
 
             <TextField
@@ -1052,7 +1116,131 @@ function CallForm({
           spacing={2}
         >
 
+         
+
           <Grid
+            size={{
+              xs: 6,
+            }}
+          >
+
+            <Autocomplete
+              freeSolo
+              options={gorusulenKisiler}
+              value={gorusulenKisi}
+              inputValue={gorusulenKisi}
+              disabled={izleyiciMi || !sube}
+              getOptionLabel={(option) => {
+
+                if (typeof option === "string") {
+                  return option;
+                }
+
+                return (
+                  option.gorusulen_kisi || ""
+                );
+
+              }}
+              isOptionEqualToValue={(
+                option,
+                value
+              ) => {
+
+                const valueText =
+                  typeof value === "string"
+                    ? value
+                    : value?.gorusulen_kisi || "";
+
+                return (
+                  option.gorusulen_kisi ===
+                  valueText
+                );
+
+              }}
+              onInputChange={(
+                e,
+                value,
+                reason
+              ) => {
+
+                if (
+                  reason === "input" ||
+                  reason === "clear"
+                ) {
+                  setGorusulenKisi(value);
+                }
+
+              }}
+              onChange={(
+                e,
+                value
+              ) => {
+
+                if (!value) {
+                  setGorusulenKisi("");
+                  return;
+                }
+
+                if (typeof value === "string") {
+                  setGorusulenKisi(value);
+                  return;
+                }
+
+                setGorusulenKisi(
+                  value.gorusulen_kisi || ""
+                );
+
+                if (value.telefon) {
+                  setTelefon(value.telefon);
+                }
+
+              }}
+              renderOption={(
+                props,
+                option
+              ) => (
+
+                <li
+                  {...props}
+                  key={`${option.gorusulen_kisi}-${option.telefon || ""}`}
+                >
+                  <div>
+                    <div>
+                      {option.gorusulen_kisi}
+                    </div>
+
+                    {option.telefon && (
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          opacity: 0.7,
+                        }}
+                      >
+                        {option.telefon}
+                      </div>
+                    )}
+                  </div>
+                </li>
+
+              )}
+              renderInput={(params) => (
+
+                <TextField
+                  {...params}
+                  fullWidth
+                  label="Görüşülen Kişi"
+                  placeholder={
+                    sube
+                      ? "Kişi seçin veya yeni isim yazın"
+                      : "Önce şube seçin"
+                  }
+                />
+
+              )}
+            />
+
+          </Grid>
+           <Grid
             size={{
               xs: 6,
             }}
@@ -1072,26 +1260,6 @@ function CallForm({
 
           </Grid>
 
-
-          <Grid
-            size={{
-              xs: 6,
-            }}
-          >
-
-            <TextField
-              fullWidth
-              label="Görüşülen Kişi"
-              value={gorusulenKisi}
-              disabled={izleyiciMi}
-              onChange={(e) =>
-                setGorusulenKisi(
-                  e.target.value
-                )
-              }
-            />
-
-          </Grid>
 
         </Grid>
 
