@@ -55,6 +55,7 @@ function Reports() {
     ariza: "",
     destek: "",
     durum: "",
+    bakim: "",
   });
 
 
@@ -70,6 +71,25 @@ function Reports() {
         .map((durum) => [
           durum.toLocaleLowerCase("tr-TR"),
           durum,
+        ])
+    ).values()
+  ).sort((a, b) =>
+    a.localeCompare(b, "tr")
+  );
+
+
+  // CAGRI_KAYITLARI içindeki destek verenlerden
+  // dinamik seçenek listesi oluştur.
+  const destekVerenSecenekleri = Array.from(
+    new Map(
+      cagrilar
+        .map((item) =>
+          (item.kullanici_adi || "").trim()
+        )
+        .filter(Boolean)
+        .map((kullaniciAdi) => [
+          kullaniciAdi.toLocaleLowerCase("tr-TR"),
+          kullaniciAdi,
         ])
     ).values()
   ).sort((a, b) =>
@@ -308,10 +328,15 @@ function Reports() {
 
 
     if (filters.destek) {
+      const seciliDestek =
+        filters.destek
+          .trim()
+          .toLocaleLowerCase("tr-TR");
+
       sonuc = sonuc.filter((item) =>
-        item.kullanici_adi
-          ?.toLowerCase()
-          .includes(filters.destek.toLowerCase())
+        (item.kullanici_adi || "")
+          .trim()
+          .toLocaleLowerCase("tr-TR") === seciliDestek
       );
     }
 
@@ -333,6 +358,19 @@ function Reports() {
     }
 
 
+    if (filters.bakim !== "") {
+      const anlasmaVar =
+        filters.bakim === "var";
+
+      sonuc = sonuc.filter(
+        (item) =>
+          Boolean(
+            item.bakim_anlasmasi_var_mi
+          ) === anlasmaVar
+      );
+    }
+
+
     setFiltrelenmisCagrilar(sonuc);
   };
 
@@ -346,6 +384,7 @@ function Reports() {
       ariza: "",
       destek: "",
       durum: "",
+      bakim: "",
     });
 
     setFiltrelenmisCagrilar(cagrilar);
@@ -1363,6 +1402,7 @@ function Reports() {
                   }}
                 >
                   <TextField
+                    select
                     fullWidth
                     size="small"
                     label="Destek Veren"
@@ -1374,7 +1414,22 @@ function Reports() {
                         borderRadius: "10px",
                       },
                     }}
-                  />
+                  >
+                    <MenuItem value="">
+                      Tümü
+                    </MenuItem>
+
+                    {destekVerenSecenekleri.map(
+                      (kullaniciAdi) => (
+                        <MenuItem
+                          key={kullaniciAdi}
+                          value={kullaniciAdi}
+                        >
+                          {kullaniciAdi}
+                        </MenuItem>
+                      )
+                    )}
+                  </TextField>
                 </Grid>
 
 
@@ -1412,6 +1467,43 @@ function Reports() {
                         {durum}
                       </MenuItem>
                     ))}
+                  </TextField>
+                </Grid>
+
+
+                {/* TELEFON DESTEK ANLAŞMASI */}
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 3,
+                  }}
+                >
+                  <TextField
+                    select
+                    fullWidth
+                    size="small"
+                    label="Telefon Destek Anlaşması"
+                    name="bakim"
+                    value={filters.bakim}
+                    onChange={handleChange}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                      },
+                    }}
+                  >
+                    <MenuItem value="">
+                      Tümü
+                    </MenuItem>
+
+                    <MenuItem value="var">
+                      Var
+                    </MenuItem>
+
+                    <MenuItem value="yok">
+                      Yok
+                    </MenuItem>
                   </TextField>
                 </Grid>
 
