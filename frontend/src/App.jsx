@@ -12,16 +12,14 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Ayarlar from "./pages/Ayarlar";
 import Raporlar from "./pages/Raporlar";
+import YerindeDestek from "./pages/YerindeDestek";
 
 
 function YenilemeKontrolu() {
-
   const location = useLocation();
   const navigate = useNavigate();
 
-
   useEffect(() => {
-
     const navigationEntries =
       performance.getEntriesByType("navigation");
 
@@ -31,31 +29,24 @@ function YenilemeKontrolu() {
     const sayfaYenilendi =
       navigation?.type === "reload";
 
-
     if (
       sayfaYenilendi &&
       location.pathname !== "/"
     ) {
-
       localStorage.removeItem("token");
 
       navigate("/", {
         replace: true,
       });
-
     }
-
   }, []);
-
 
   return null;
 }
 
 
 function App() {
-
   return (
-
     <HashRouter>
 
       <YenilemeKontrolu />
@@ -73,6 +64,11 @@ function App() {
         />
 
         <Route
+          path="/yerinde-destek"
+          element={<YerindeDestek />}
+        />
+
+        <Route
           path="/ayarlar"
           element={<Ayarlar />}
         />
@@ -85,10 +81,7 @@ function App() {
       </Routes>
 
     </HashRouter>
-
   );
-
 }
-
 
 export default App;

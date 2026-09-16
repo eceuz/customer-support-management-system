@@ -1120,7 +1120,8 @@ function CallForm({
 
           <Grid
             size={{
-              xs: 6,
+              xs: 12,
+              sm: 6,
             }}
           >
 
@@ -1242,7 +1243,8 @@ function CallForm({
           </Grid>
            <Grid
             size={{
-              xs: 6,
+              xs: 12,
+              sm: 6,
             }}
           >
 

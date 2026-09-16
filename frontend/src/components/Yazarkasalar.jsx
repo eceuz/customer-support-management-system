@@ -610,6 +610,7 @@ function Yazarkasalar() {
       ====================================================== */}
 
       <div
+        className="settings-module-header"
         style={{
           display: "flex",
           justifyContent:

@@ -779,3 +779,341 @@ def get_gorusulen_kisiler(
         kisiler[anahtar]
         for anahtar in siralama
     ]
+
+
+# =========================================================
+# YERİNDE DESTEK İŞLEMLERİ
+# =========================================================
+
+
+def create_ariza(
+    db: Session,
+    ariza: schemas.ArizaKaydiCreate,
+    olusturan_kullanici_id: int
+):
+    yeni_ariza = models.ArizaKayitlari(
+        sube_id=ariza.sube_id,
+        sorun=ariza.sorun,
+        olusturan_kullanici_id=olusturan_kullanici_id,
+        durum="atama_bekliyor"
+    )
+
+    db.add(yeni_ariza)
+    db.commit()
+    db.refresh(yeni_ariza)
+
+    return yeni_ariza
+
+
+# ---------------------------------------------------------
+# Tek bir arıza kaydını getir
+# ---------------------------------------------------------
+
+def get_ariza(
+    db: Session,
+    ariza_kaydi_id: int
+):
+    return (
+        db.query(models.ArizaKayitlari)
+        .filter(
+            models.ArizaKayitlari.ariza_kaydi_id
+            == ariza_kaydi_id
+        )
+        .first()
+    )
+
+
+# ---------------------------------------------------------
+# Tüm arızaları listele
+# Yönetici ekranında kullanılacak
+# ---------------------------------------------------------
+
+def get_ariza_listesi(db: Session):
+
+    arizalar = (
+        db.query(models.ArizaKayitlari)
+        .options(
+            joinedload(models.ArizaKayitlari.sube)
+            .joinedload(models.Subeler.musteri),
+
+            joinedload(
+                models.ArizaKayitlari.olusturan_kullanici
+            ),
+
+            joinedload(
+                models.ArizaKayitlari.atanan_kullanici
+            )
+        )
+        .order_by(
+            models.ArizaKayitlari.olusturma_tarihi.desc()
+        )
+        .all()
+    )
+
+    sonuc = []
+
+    for ariza in arizalar:
+
+        musteri = ariza.sube.musteri
+
+        sonuc.append({
+            "ariza_kaydi_id": ariza.ariza_kaydi_id,
+
+            "musteri_adi":
+                musteri.musteri_adi
+                or musteri.cari_adi,
+
+            "sube_adi": ariza.sube.sube_adi,
+
+            "sorun": ariza.sorun,
+            "durum": ariza.durum,
+
+            "olusturan_kullanici_adi":
+                ariza.olusturan_kullanici.kullanici_adi,
+
+            "atanan_kullanici_id":
+                ariza.atanan_kullanici_id,
+
+            "atanan_kullanici_adi":
+                (
+                    ariza.atanan_kullanici.kullanici_adi
+                    if ariza.atanan_kullanici
+                    else None
+                ),
+
+            "olusturma_tarihi":
+                ariza.olusturma_tarihi,
+
+            "atanma_tarihi":
+                ariza.atanma_tarihi,
+
+            "ise_baslama_tarihi":
+                ariza.ise_baslama_tarihi,
+
+            "tamamlanma_tarihi":
+                ariza.tamamlanma_tarihi
+        })
+
+    return sonuc
+
+
+# ---------------------------------------------------------
+# Personelin kendisine atanmış işleri
+# ---------------------------------------------------------
+
+def get_bana_atanan_arizalar(
+    db: Session,
+    kullanici_id: int
+):
+
+    arizalar = (
+        db.query(models.ArizaKayitlari)
+        .options(
+            joinedload(models.ArizaKayitlari.sube)
+            .joinedload(models.Subeler.musteri),
+
+            joinedload(
+                models.ArizaKayitlari.olusturan_kullanici
+            ),
+
+            joinedload(
+                models.ArizaKayitlari.atanan_kullanici
+            )
+        )
+        .filter(
+            models.ArizaKayitlari.atanan_kullanici_id
+            == kullanici_id
+        )
+        .order_by(
+            models.ArizaKayitlari.atanma_tarihi.desc()
+        )
+        .all()
+    )
+
+    sonuc = []
+
+    for ariza in arizalar:
+
+        musteri = ariza.sube.musteri
+
+        sonuc.append({
+            "ariza_kaydi_id": ariza.ariza_kaydi_id,
+
+            "musteri_adi":
+                musteri.musteri_adi
+                or musteri.cari_adi,
+
+            "sube_adi": ariza.sube.sube_adi,
+
+            "sorun": ariza.sorun,
+            "durum": ariza.durum,
+
+            "olusturan_kullanici_adi":
+                ariza.olusturan_kullanici.kullanici_adi,
+
+            "atanan_kullanici_id":
+                ariza.atanan_kullanici_id,
+
+            "atanan_kullanici_adi":
+                (
+                    ariza.atanan_kullanici.kullanici_adi
+                    if ariza.atanan_kullanici
+                    else None
+                ),
+
+            "olusturma_tarihi":
+                ariza.olusturma_tarihi,
+
+            "atanma_tarihi":
+                ariza.atanma_tarihi,
+
+            "ise_baslama_tarihi":
+                ariza.ise_baslama_tarihi,
+
+            "tamamlanma_tarihi":
+                ariza.tamamlanma_tarihi
+        })
+
+    return sonuc
+
+
+# ---------------------------------------------------------
+# Yönetici işi personele atar
+# ---------------------------------------------------------
+
+def ariza_ata(
+    db: Session,
+    ariza_kaydi_id: int,
+    atanan_kullanici_id: int
+):
+
+    ariza = get_ariza(
+        db,
+        ariza_kaydi_id
+    )
+
+    if not ariza:
+        return None
+
+    ariza.atanan_kullanici_id = atanan_kullanici_id
+
+    ariza.atanma_tarihi = (
+        datetime.utcnow()
+        + timedelta(hours=3)
+    )
+
+    ariza.durum = "atandi"
+
+    db.commit()
+    db.refresh(ariza)
+
+    return ariza
+
+
+# ---------------------------------------------------------
+# Personel "İşe Başla" butonuna basar
+# ---------------------------------------------------------
+
+def ariza_ise_basla(
+    db: Session,
+    ariza_kaydi_id: int
+):
+
+    ariza = get_ariza(
+        db,
+        ariza_kaydi_id
+    )
+
+    if not ariza:
+        return None
+
+    ariza.ise_baslama_tarihi = (
+        datetime.utcnow()
+        + timedelta(hours=3)
+    )
+
+    ariza.durum = "devam_ediyor"
+
+    db.commit()
+    db.refresh(ariza)
+
+    return ariza
+
+
+# ---------------------------------------------------------
+# Arızaya yapılan işlem eklenir
+# ---------------------------------------------------------
+
+def ariza_islem_ekle(
+    db: Session,
+    ariza_kaydi_id: int,
+    islem: schemas.ArizaIslemCreate,
+    kullanici_id: int
+):
+
+    yeni_islem = models.ArizaIslemleri(
+        ariza_kaydi_id=ariza_kaydi_id,
+        kullanici_id=kullanici_id,
+        yapilan_islem=islem.yapilan_islem,
+        ucret=islem.ucret,
+        konsinye_urun_bilgisi=
+            islem.konsinye_urun_bilgisi
+    )
+
+    db.add(yeni_islem)
+    db.commit()
+    db.refresh(yeni_islem)
+
+    return yeni_islem
+
+
+# ---------------------------------------------------------
+# Bir arızaya yapılan bütün işlemleri getir
+# ---------------------------------------------------------
+
+def get_ariza_islemleri(
+    db: Session,
+    ariza_kaydi_id: int
+):
+
+    return (
+        db.query(models.ArizaIslemleri)
+        .filter(
+            models.ArizaIslemleri.ariza_kaydi_id
+            == ariza_kaydi_id
+        )
+        .order_by(
+            models.ArizaIslemleri.islem_tarihi.desc()
+        )
+        .all()
+    )
+
+
+# ---------------------------------------------------------
+# Arıza tamamlanır
+# ---------------------------------------------------------
+
+def ariza_tamamla(
+    db: Session,
+    ariza_kaydi_id: int
+):
+
+    ariza = get_ariza(
+        db,
+        ariza_kaydi_id
+    )
+
+    if not ariza:
+        return None
+
+    ariza.durum = "tamamlandi"
+
+    ariza.tamamlanma_tarihi = (
+        datetime.utcnow()
+        + timedelta(hours=3)
+    )
+
+    db.commit()
+    db.refresh(ariza)
+
+    return ariza

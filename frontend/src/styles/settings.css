@@ -129,3 +129,45 @@
     color:#1f2937;
 
 }
+@media (max-width: 900px) {
+    .settings-page {
+        flex-direction: column;
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .settings-sidebar {
+        width: 100%;
+        max-width: none;
+    }
+
+    .settings-content {
+        width: 100%;
+        min-width: 0;
+        padding: 18px;
+    }
+}
+
+@media (max-width: 600px) {
+    .settings-page {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .settings-content {
+        padding: 12px;
+        border-radius: 14px;
+    }
+}
+
+@media (max-width: 600px) {
+    .settings-module-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+    }
+
+    .settings-module-header .MuiButton-root {
+        width: 100%;
+    }
+}

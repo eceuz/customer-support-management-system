@@ -1,4 +1,5 @@
 import Header from "../components/Header";
+import YerindeDestekRaporlari from "../components/YerindeDestekRaporlari";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -148,6 +149,10 @@ function Reports() {
 
     if (sekme === "yazarkasalar") {
       setAktifSekme(2);
+    }
+
+    if (sekme === "yerinde-destek") {
+      setAktifSekme(3);
     }
   }, [searchParams]);
 
@@ -1179,7 +1184,7 @@ function Reports() {
 
       <Box
         sx={{
-          p: 3,
+          p: { xs: 1.25, sm: 2, md: 3 },
           backgroundColor: "#f8fafc",
           minHeight: "100vh",
         }}
@@ -1194,7 +1199,7 @@ function Reports() {
             letterSpacing: "-0.5px",
           }}
         >
-          Raporlar & Çağrı Analizi
+    
         </Typography>
 
 
@@ -1213,13 +1218,28 @@ function Reports() {
             onChange={(e, value) =>
               setAktifSekme(value)
             }
-            variant="fullWidth"
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            sx={{
+              "& .MuiTabs-flexContainer": {
+                width: { md: "100%" },
+              },
+              "& .MuiTab-root": {
+                minWidth: { xs: "145px", md: 0 },
+                flex: { md: 1 },
+                textTransform: "none",
+                fontSize: { xs: "13px", sm: "14px" },
+              },
+            }}
           >
             <Tab label="Çağrı Kayıtları" />
 
             <Tab label="Müşteriler & Şubeler" />
 
             <Tab label="Yazar Kasalar" />
+
+            <Tab label="Yerinde Destek" />
           </Tabs>
         </Paper>
 
@@ -1234,7 +1254,7 @@ function Reports() {
             <Paper
               elevation={0}
               sx={{
-                p: 3,
+                p: { xs: 1.5, sm: 2, md: 3 },
                 mb: 3,
                 borderRadius: "16px",
                 border: "1px solid #e2e8f0",
@@ -1518,6 +1538,8 @@ function Reports() {
                   sx={{
                     display: "flex",
                     gap: 1.5,
+                    flexDirection: { xs: "column", sm: "row" },
+                    "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } },
                   }}
                 >
                   <Button
@@ -1574,7 +1596,7 @@ function Reports() {
             <Paper
               elevation={0}
               sx={{
-                p: 3,
+                p: { xs: 1.5, sm: 2, md: 3 },
                 borderRadius: "16px",
                 border: "1px solid #e2e8f0",
                 boxShadow:
@@ -1587,7 +1609,8 @@ function Reports() {
                 sx={{
                   display: "flex",
                   justifyContent: "space-between",
-                  alignItems: "center",
+                  alignItems: { xs: "stretch", sm: "center" },
+                  flexDirection: { xs: "column", sm: "row" },
                   mb: 2,
                   gap: 2,
                 }}
@@ -1608,6 +1631,9 @@ function Reports() {
                     display: "flex",
                     alignItems: "center",
                     gap: 1.5,
+                    flexWrap: "wrap",
+                    justifyContent: { xs: "space-between", sm: "flex-end" },
+                    "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } },
                   }}
                 >
                   <Chip
@@ -1930,7 +1956,7 @@ function Reports() {
             <Paper
               elevation={0}
               sx={{
-                p: 3,
+                p: { xs: 1.5, sm: 2, md: 3 },
                 mb: 3,
                 borderRadius: "16px",
                 border: "1px solid #e2e8f0",
@@ -2092,6 +2118,8 @@ function Reports() {
                   sx={{
                     display: "flex",
                     gap: 1.5,
+                    flexDirection: { xs: "column", sm: "row" },
+                    "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } },
                   }}
                 >
                   <Button
@@ -2148,7 +2176,7 @@ function Reports() {
             <Paper
               elevation={0}
               sx={{
-                p: 3,
+                p: { xs: 1.5, sm: 2, md: 3 },
                 borderRadius: "16px",
                 border: "1px solid #e2e8f0",
                 boxShadow:
@@ -2160,7 +2188,8 @@ function Reports() {
                 sx={{
                   display: "flex",
                   justifyContent: "space-between",
-                  alignItems: "center",
+                  alignItems: { xs: "stretch", sm: "center" },
+                  flexDirection: { xs: "column", sm: "row" },
                   mb: 2,
                   gap: 2,
                 }}
@@ -2181,6 +2210,9 @@ function Reports() {
                     display: "flex",
                     alignItems: "center",
                     gap: 1.5,
+                    flexWrap: "wrap",
+                    justifyContent: { xs: "space-between", sm: "flex-end" },
+                    "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } },
                   }}
                 >
                   <Chip
@@ -2208,11 +2240,14 @@ function Reports() {
 
               <TableContainer
                 sx={{
+                  width: "100%",
+                  maxWidth: "100%",
+                  overflowX: "auto",
                   borderRadius: "12px",
                   border: "1px solid #f1f5f9",
                 }}
               >
-                <Table>
+                <Table sx={{ minWidth: "760px" }}>
                   <TableHead
                     sx={{
                       backgroundColor: "#f8fafc",
@@ -2382,7 +2417,7 @@ function Reports() {
             <Paper
               elevation={0}
               sx={{
-                p: 3,
+                p: { xs: 1.5, sm: 2, md: 3 },
                 mb: 3,
                 borderRadius: "16px",
                 border: "1px solid #e2e8f0",
@@ -2653,6 +2688,8 @@ function Reports() {
                   sx={{
                     display: "flex",
                     gap: 1.5,
+                    flexDirection: { xs: "column", sm: "row" },
+                    "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } },
                   }}
                 >
                   <Button
@@ -2709,7 +2746,7 @@ function Reports() {
             <Paper
               elevation={0}
               sx={{
-                p: 3,
+                p: { xs: 1.5, sm: 2, md: 3 },
                 borderRadius: "16px",
                 border: "1px solid #e2e8f0",
                 boxShadow:
@@ -2721,7 +2758,8 @@ function Reports() {
                 sx={{
                   display: "flex",
                   justifyContent: "space-between",
-                  alignItems: "center",
+                  alignItems: { xs: "stretch", sm: "center" },
+                  flexDirection: { xs: "column", sm: "row" },
                   mb: 2,
                   gap: 2,
                 }}
@@ -2742,6 +2780,9 @@ function Reports() {
                     display: "flex",
                     alignItems: "center",
                     gap: 1.5,
+                    flexWrap: "wrap",
+                    justifyContent: { xs: "space-between", sm: "flex-end" },
+                    "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } },
                   }}
                 >
                   <Chip
@@ -3069,6 +3110,15 @@ function Reports() {
               </TableContainer>
             </Paper>
           </>
+        )}
+
+
+        {/* ================================================= */}
+        {/* YERİNDE DESTEK RAPORU */}
+        {/* ================================================= */}
+
+        {aktifSekme === 3 && (
+          <YerindeDestekRaporlari />
         )}
       </Box>
     </>

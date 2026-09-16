@@ -173,3 +173,26 @@
     }
 
 }
+@media (max-width: 600px) {
+    .call-form {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    .form-title {
+        font-size: 19px !important;
+        margin-bottom: 22px !important;
+    }
+
+    .form-section {
+        margin-bottom: 22px;
+    }
+
+    .button-area {
+        width: 100%;
+    }
+
+    .save-button {
+        width: 100%;
+    }
+}

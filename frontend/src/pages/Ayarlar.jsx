@@ -76,28 +76,21 @@ function Ayarlar() {
       <Header />
 
 
-      <main
-        className="settings-page"
-        style={{
-          display: "flex",
-          gap: "24px",
-          padding: "24px"
-        }}
-      >
+      <main className="settings-page">
 
         {/* SOL MENÜ */}
 
         <Paper
           elevation={0}
           className="settings-sidebar"
-          style={{
-            width: "300px",
-            padding: "16px",
+          sx={{
+            width: { xs: "100%", md: "300px" },
+            p: 2,
             borderRadius: "16px",
             height: "fit-content",
             backgroundColor: "#ffffff",
-            border:
-              "1px solid rgba(0, 0, 0, 0.06)"
+            border: "1px solid rgba(0, 0, 0, 0.06)",
+            flexShrink: 0,
           }}
         >
 
@@ -257,12 +250,7 @@ function Ayarlar() {
 
         {/* İÇERİK */}
 
-        <div
-          className="settings-content"
-          style={{
-            flex: 1
-          }}
-        >
+        <div className="settings-content">
 
           {activeModule ===
             "musteriler" && (

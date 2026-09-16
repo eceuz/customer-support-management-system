@@ -2,6 +2,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from decimal import Decimal
+
 
 class MusteriCreate(BaseModel):
     cari_kodu: int
@@ -188,3 +190,73 @@ class YazarkasaResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ArizaKaydiCreate(BaseModel):
+    sube_id: int
+    sorun:str
+
+
+class ArizaAtama (BaseModel):
+    atanan_kullanici_id: int
+
+
+class ArizaKaydiResponse(BaseModel):
+    ariza_kaydi_id: int
+    sube_id: int
+
+    olusturan_kullanici_id: int
+    atanan_kullanici_id: Optional[int] = None
+
+    sorun: str
+    durum: str
+
+    olusturma_tarihi: datetime
+    atanma_tarihi: Optional[datetime] = None
+    ise_baslama_tarihi: Optional[datetime] = None
+    tamamlanma_tarihi: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ArizaListeResponse(BaseModel):
+    ariza_kaydi_id: int
+
+    musteri_adi: str
+    sube_adi: str
+
+    sorun: str
+    durum: str
+
+    olusturan_kullanici_adi: str
+
+    atanan_kullanici_id: Optional[int] = None
+    atanan_kullanici_adi: Optional[str] = None
+
+    olusturma_tarihi: datetime
+    atanma_tarihi: Optional[datetime] = None
+    ise_baslama_tarihi: Optional[datetime] = None
+    tamamlanma_tarihi: Optional[datetime] = None
+
+
+class ArizaIslemCreate(BaseModel):
+    yapilan_islem: str
+    ucret: Optional[Decimal] = None
+    konsinye_urun_bilgisi: Optional[str] = None
+
+
+class ArizaIslemResponse(BaseModel):
+    islem_id: int
+    ariza_kaydi_id: int
+    kullanici_id: int
+
+    yapilan_islem: str
+    ucret: Optional[Decimal] = None
+    konsinye_urun_bilgisi: Optional[str] = None
+
+    islem_tarihi: datetime
+
+    class Config:
+        from_attributes = True
+

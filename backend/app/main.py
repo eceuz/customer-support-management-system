@@ -595,3 +595,345 @@ def gorusulen_kisileri_getir(
         db,
         sube_id
     )
+
+# =========================================================
+# YERİNDE DESTEK - ARIZA KAYITLARI
+# =========================================================
+
+
+# ---------------------------------------------------------
+# Yeni arıza kaydı oluştur
+# ---------------------------------------------------------
+
+@app.post(
+    "/arizalar",
+    response_model=schemas.ArizaKaydiResponse
+)
+def ariza_olustur(
+    ariza: schemas.ArizaKaydiCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        require_roles("ADMİN", "DESTEK")
+    )
+):
+
+    # Şube gerçekten var mı?
+    sube = (
+        db.query(models.Subeler)
+        .filter(
+            models.Subeler.sube_id == ariza.sube_id
+        )
+        .first()
+    )
+
+    if sube is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Şube bulunamadı."
+        )
+
+    return crud.create_ariza(
+        db,
+        ariza,
+        current_user.kullanici_id
+    )
+
+
+# ---------------------------------------------------------
+# Tüm arıza kayıtlarını listele
+# Yönetici ve izleyici görebilir
+# ---------------------------------------------------------
+
+@app.get(
+    "/arizalar",
+    response_model=list[schemas.ArizaListeResponse]
+)
+def arizalari_listele(
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        require_roles("ADMİN", "İZLEYİCİ","DESTEK")
+    )
+):
+
+    return crud.get_ariza_listesi(db)
+
+
+# ---------------------------------------------------------
+# Giriş yapan personelin üzerine atanmış işler
+# ---------------------------------------------------------
+
+@app.get(
+    "/arizalar/bana-atananlar",
+    response_model=list[schemas.ArizaListeResponse]
+)
+def bana_atanan_arizalari_getir(
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        get_current_user
+    )
+):
+
+    return crud.get_bana_atanan_arizalar(
+        db,
+        current_user.kullanici_id
+    )
+
+
+# ---------------------------------------------------------
+# Yönetici işi personele atar
+# ---------------------------------------------------------
+
+@app.put(
+    "/arizalar/{ariza_kaydi_id}/ata",
+    response_model=schemas.ArizaKaydiResponse
+)
+def arizayi_personele_ata(
+    ariza_kaydi_id: int,
+    atama: schemas.ArizaAtama,
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        require_roles("ADMİN")
+    )
+):
+
+    ariza = crud.get_ariza(
+        db,
+        ariza_kaydi_id
+    )
+
+    if ariza is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Arıza kaydı bulunamadı."
+        )
+
+    # Atanmak istenen kullanıcı gerçekten var mı?
+    personel = (
+        db.query(models.Kullanicilar)
+        .filter(
+            models.Kullanicilar.kullanici_id
+            == atama.atanan_kullanici_id
+        )
+        .first()
+    )
+
+    if personel is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Personel bulunamadı."
+        )
+
+    # İzleyiciye iş atanmasın
+    if personel.rol == "İZLEYİCİ":
+        raise HTTPException(
+            status_code=400,
+            detail="İzleyici rolündeki kullanıcıya iş atanamaz."
+        )
+
+    return crud.ariza_ata(
+        db,
+        ariza_kaydi_id,
+        atama.atanan_kullanici_id
+    )
+
+
+# ---------------------------------------------------------
+# Personel işe başlar
+# ---------------------------------------------------------
+
+@app.put(
+    "/arizalar/{ariza_kaydi_id}/ise-basla",
+    response_model=schemas.ArizaKaydiResponse
+)
+def ariza_ise_baslat(
+    ariza_kaydi_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        require_roles("ADMİN", "DESTEK")
+    )
+):
+
+    ariza = crud.get_ariza(
+        db,
+        ariza_kaydi_id
+    )
+
+    if ariza is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Arıza kaydı bulunamadı."
+        )
+
+    # Admin dışında herkes sadece kendi işine müdahale edebilir
+    if (
+        current_user.rol != "ADMİN"
+        and ariza.atanan_kullanici_id
+        != current_user.kullanici_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Bu iş sizin üzerinize atanmış değil."
+        )
+
+    if ariza.atanan_kullanici_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Bu arıza henüz bir personele atanmadı."
+        )
+
+    if ariza.durum == "tamamlandi":
+        raise HTTPException(
+            status_code=400,
+            detail="Tamamlanmış bir iş yeniden başlatılamaz."
+        )
+
+    return crud.ariza_ise_basla(
+        db,
+        ariza_kaydi_id
+    )
+
+
+# ---------------------------------------------------------
+# Personel arızaya işlem ekler
+# ---------------------------------------------------------
+
+@app.post(
+    "/arizalar/{ariza_kaydi_id}/islemler",
+    response_model=schemas.ArizaIslemResponse
+)
+def ariza_islemi_ekle(
+    ariza_kaydi_id: int,
+    islem: schemas.ArizaIslemCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        require_roles("ADMİN", "DESTEK")
+    )
+):
+
+    ariza = crud.get_ariza(
+        db,
+        ariza_kaydi_id
+    )
+
+    if ariza is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Arıza kaydı bulunamadı."
+        )
+
+    if (
+        current_user.rol != "ADMİN"
+        and ariza.atanan_kullanici_id
+        != current_user.kullanici_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Bu işe işlem ekleme yetkiniz yok."
+        )
+
+    if ariza.durum == "tamamlandi":
+        raise HTTPException(
+            status_code=400,
+            detail="Tamamlanmış bir işe yeni işlem eklenemez."
+        )
+
+    return crud.ariza_islem_ekle(
+        db,
+        ariza_kaydi_id,
+        islem,
+        current_user.kullanici_id
+    )
+
+
+# ---------------------------------------------------------
+# Bir arızaya yapılan işlemleri getir
+# ---------------------------------------------------------
+
+@app.get(
+    "/arizalar/{ariza_kaydi_id}/islemler",
+    response_model=list[schemas.ArizaIslemResponse]
+)
+def ariza_islemlerini_getir(
+    ariza_kaydi_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        get_current_user
+    )
+):
+
+    ariza = crud.get_ariza(
+        db,
+        ariza_kaydi_id
+    )
+
+    if ariza is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Arıza kaydı bulunamadı."
+        )
+
+    # Destek personeli başka personelin iş detayını görmesin.
+    # Admin ve izleyici görüntüleyebilir.
+    if (
+        current_user.rol == "DESTEK"
+        and ariza.atanan_kullanici_id
+        != current_user.kullanici_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Bu işin işlem detaylarını görüntüleyemezsiniz."
+        )
+
+    return crud.get_ariza_islemleri(
+        db,
+        ariza_kaydi_id
+    )
+
+
+# ---------------------------------------------------------
+# Personel işi tamamlar
+# ---------------------------------------------------------
+
+@app.put(
+    "/arizalar/{ariza_kaydi_id}/tamamla",
+    response_model=schemas.ArizaKaydiResponse
+)
+def ariza_tamamla(
+    ariza_kaydi_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.Kullanicilar = Depends(
+        require_roles("ADMİN", "DESTEK")
+    )
+):
+
+    ariza = crud.get_ariza(
+        db,
+        ariza_kaydi_id
+    )
+
+    if ariza is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Arıza kaydı bulunamadı."
+        )
+
+    if (
+        current_user.rol != "ADMİN"
+        and ariza.atanan_kullanici_id
+        != current_user.kullanici_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Bu işi tamamlama yetkiniz yok."
+        )
+
+    if ariza.durum == "tamamlandi":
+        raise HTTPException(
+            status_code=400,
+            detail="Bu iş zaten tamamlanmış."
+        )
+
+    return crud.ariza_tamamla(
+        db,
+        ariza_kaydi_id
+    )

@@ -45,21 +45,22 @@ function Login() {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        height: "100vh",
+        minHeight: "100dvh",
+        padding: "16px",
         background: "#f4f6f9",
       }}
     >
       <Paper
         sx={{
-          padding: 4,
-          width: 400,
+          p: { xs: 2.5, sm: 4 },
+          width: "100%",
+          maxWidth: 400,
           borderRadius: 3,
         }}
       >
         <Typography
           variant="h5"
-          textAlign="center"
-          mb={3}
+          sx={{ textAlign: "center", mb: 3 }}
         >
           Destek Sistemi
         </Typography>

@@ -226,7 +226,7 @@ function Kullanicilar() {
     <Paper
       elevation={0}
       sx={{
-        p: 4,
+        p: { xs: 2, sm: 3, md: 4 },
         borderRadius: "16px",
         backgroundColor: "#ffffff",
         border: "1px solid rgba(0, 0, 0, 0.06)",
@@ -235,6 +235,7 @@ function Kullanicilar() {
     >
       {/* BAŞLIK */}
       <div
+        className="settings-module-header"
         style={{
           display: "flex",
           justifyContent: "space-between",

@@ -29,6 +29,7 @@ import DoneIcon from "@mui/icons-material/Done";
 import api from "../api/api";
 import { getYazarkasalar } from "../api/yazarkasaService";
 import { getUserRole } from "../api/authService";
+import { getBanaAtananArizalar } from "../api/yerindeDestekService";
 
 
 function Header() {
@@ -44,6 +45,11 @@ function Header() {
   const [
     yazarkasaBildirimleri,
     setYazarkasaBildirimleri
+  ] = useState([]);
+
+  const [
+    yerindeDestekBildirimleri,
+    setYerindeDestekBildirimleri
   ] = useState([]);
 
   const [
@@ -161,6 +167,42 @@ function Header() {
   };
 
 
+  const gorulenYerindeDestekBildirimleriStorageKey =
+    `yerinde_destek_gorulen_bildirimler_${kullaniciId}`;
+
+
+  const getGorulenYerindeDestekBildirimleri = () => {
+
+    try {
+
+      const kayit = localStorage.getItem(
+        gorulenYerindeDestekBildirimleriStorageKey
+      );
+
+      if (!kayit) {
+        return [];
+      }
+
+      const parsed = JSON.parse(kayit);
+
+      return Array.isArray(parsed)
+        ? parsed
+        : [];
+
+    } catch (error) {
+
+      console.error(
+        "Görülen yerinde destek bildirimleri okunamadı:",
+        error
+      );
+
+      return [];
+
+    }
+
+  };
+
+
   // =========================================================
   // BİLDİRİM ANAHTARI
   // Bitiş tarihi değişirse yeni bildirim tekrar çıkar.
@@ -172,6 +214,17 @@ function Header() {
       return (
         `${yazarkasa.yazarkasa_id}_` +
         `${yazarkasa.bitis_tarihi || "tarihsiz"}`
+      );
+
+    };
+
+
+  const getYerindeDestekBildirimAnahtari =
+    (is) => {
+
+      return (
+        `${is.ariza_kaydi_id}_` +
+        `${is.atanma_tarihi || "atanma-tarihi-yok"}`
       );
 
     };
@@ -463,6 +516,90 @@ function Header() {
 
 
   // =========================================================
+  // YERİNDE DESTEK BİLDİRİMLERİNİ YÜKLE
+  // =========================================================
+
+  const yerindeDestekBildirimleriniYukle =
+    async () => {
+
+      if (
+        !token ||
+        kullaniciRol !== "DESTEK"
+      ) {
+        setYerindeDestekBildirimleri([]);
+        return;
+      }
+
+      try {
+
+        const response =
+          await getBanaAtananArizalar();
+
+        const atananIsler =
+          response.data || [];
+
+        const gorulenBildirimler =
+          getGorulenYerindeDestekBildirimleri();
+
+        const bildirimler =
+          atananIsler
+            .filter((is) =>
+              is.durum !== "tamamlandi"
+            )
+            .map((is) => {
+
+              const bildirimAnahtari =
+                getYerindeDestekBildirimAnahtari(is);
+
+              if (
+                gorulenBildirimler.includes(
+                  bildirimAnahtari
+                )
+              ) {
+                return null;
+              }
+
+              return {
+                ...is,
+                bildirimAnahtari,
+                durum: "Yeni İş Atandı",
+                renk: "#1d4ed8",
+                arkaPlan: "#dbeafe",
+              };
+
+            })
+            .filter(Boolean)
+            .sort((a, b) => {
+
+              const tarihA = a.atanma_tarihi
+                ? new Date(a.atanma_tarihi).getTime()
+                : 0;
+
+              const tarihB = b.atanma_tarihi
+                ? new Date(b.atanma_tarihi).getTime()
+                : 0;
+
+              return tarihB - tarihA;
+
+            });
+
+        setYerindeDestekBildirimleri(
+          bildirimler
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Yerinde destek bildirimleri yüklenemedi:",
+          error
+        );
+
+      }
+
+    };
+
+
+  // =========================================================
   // SAYFA AÇILINCA + SAATLİK + ANLIK KONTROL
   // =========================================================
 
@@ -507,6 +644,65 @@ function Header() {
       window.removeEventListener(
         "yazarkasa-guncellendi",
         handleYazarkasaGuncellendi
+      );
+
+    };
+
+  }, []);
+
+
+  // =========================================================
+  // YERİNDE DESTEK - SAYFA AÇILINCA + 30 SANİYEDE BİR KONTROL
+  // =========================================================
+
+  useEffect(() => {
+
+    if (
+      !token ||
+      kullaniciRol !== "DESTEK"
+    ) {
+      return;
+    }
+
+    yerindeDestekBildirimleriniYukle();
+
+    const interval =
+      setInterval(() => {
+        yerindeDestekBildirimleriniYukle();
+      }, 30 * 1000);
+
+    const handleYerindeDestekGuncellendi =
+      () => {
+        yerindeDestekBildirimleriniYukle();
+      };
+
+    const handleWindowFocus =
+      () => {
+        yerindeDestekBildirimleriniYukle();
+      };
+
+    window.addEventListener(
+      "yerinde-destek-guncellendi",
+      handleYerindeDestekGuncellendi
+    );
+
+    window.addEventListener(
+      "focus",
+      handleWindowFocus
+    );
+
+    return () => {
+
+      clearInterval(interval);
+
+      window.removeEventListener(
+        "yerinde-destek-guncellendi",
+        handleYerindeDestekGuncellendi
+      );
+
+      window.removeEventListener(
+        "focus",
+        handleWindowFocus
       );
 
     };
@@ -567,6 +763,52 @@ function Header() {
 
 
   // =========================================================
+  // YERİNDE DESTEK BİLDİRİMİ - GÖRDÜM
+  // =========================================================
+
+  const handleYerindeDestekBildirimGordum =
+    (bildirim) => {
+
+      try {
+
+        const mevcut =
+          getGorulenYerindeDestekBildirimleri();
+
+        const yeniListe =
+          Array.from(
+            new Set([
+              ...mevcut,
+              bildirim.bildirimAnahtari,
+            ])
+          );
+
+        localStorage.setItem(
+          gorulenYerindeDestekBildirimleriStorageKey,
+          JSON.stringify(yeniListe)
+        );
+
+        setYerindeDestekBildirimleri(
+          (onceki) =>
+            onceki.filter(
+              (item) =>
+                item.bildirimAnahtari !==
+                bildirim.bildirimAnahtari
+            )
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Yerinde destek bildirimi görüldü olarak işaretlenemedi:",
+          error
+        );
+
+      }
+
+    };
+
+
+  // =========================================================
   // TARİH
   // =========================================================
 
@@ -582,6 +824,27 @@ function Header() {
         `${tarih}T00:00:00`
       ).toLocaleDateString(
         "tr-TR"
+      );
+
+    };
+
+
+  const formatTarihSaat =
+    (tarih) => {
+
+      if (!tarih) {
+        return "-";
+      }
+
+      return new Date(tarih).toLocaleString(
+        "tr-TR",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }
       );
 
     };
@@ -710,6 +973,7 @@ function Header() {
 
       <nav className="header-nav">
 
+        {/* ÇAĞRI KAYITLARI */}
         <button
           className={
             location.pathname ===
@@ -721,10 +985,28 @@ function Header() {
             navigate("/dashboard")
           }
         >
-          Ana Sayfa
+          Çağrı Kayıtları
         </button>
 
 
+        {/* YERİNDE DESTEK */}
+        <button
+          className={
+            location.pathname.startsWith(
+              "/yerinde-destek"
+            )
+              ? "active"
+              : ""
+          }
+          onClick={() =>
+            navigate("/yerinde-destek")
+          }
+        >
+          Yerinde Destek
+        </button>
+
+
+        {/* RAPORLAR */}
         <button
           className={
             location.pathname ===
@@ -740,6 +1022,7 @@ function Header() {
         </button>
 
 
+        {/* AYARLAR */}
         <button
           className={
             location.pathname ===
@@ -789,7 +1072,8 @@ function Header() {
 
           <Badge
             badgeContent={
-              yazarkasaBildirimleri.length
+              yazarkasaBildirimleri.length +
+              yerindeDestekBildirimleri.length
             }
             color="error"
             max={99}
@@ -832,8 +1116,10 @@ function Header() {
           }}
         >
 
-          {yazarkasaBildirimleri.length ===
-            0 && (
+          {(
+            yazarkasaBildirimleri.length +
+            yerindeDestekBildirimleri.length
+          ) === 0 && (
 
             <Box
               sx={{
@@ -858,8 +1144,10 @@ function Header() {
           )}
 
 
-          {yazarkasaBildirimleri.length >
-            0 && (
+          {(
+            yazarkasaBildirimleri.length +
+            yerindeDestekBildirimleri.length
+          ) > 0 && (
 
             <Box
               sx={{
@@ -868,12 +1156,177 @@ function Header() {
               }}
             >
 
+              {/* YERİNDE DESTEK BİLDİRİMLERİ */}
+
+              {yerindeDestekBildirimleri.map(
+                (bildirim) => (
+
+                  <Box
+                    key={
+                      `yerinde-${bildirim.bildirimAnahtari}`
+                    }
+                    sx={{
+                      px: 2.2,
+                      py: 1.7,
+                      borderBottom:
+                        "1px solid #f1f5f9",
+
+                      "&:hover": {
+                        backgroundColor:
+                          "#f8fafc",
+                      },
+                    }}
+                  >
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent:
+                          "space-between",
+                        alignItems:
+                          "center",
+                        gap: 1,
+                        mb: 1,
+                      }}
+                    >
+
+                      <Chip
+                        label="Yeni İş Atandı"
+                        size="small"
+                        sx={{
+                          height: "23px",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          color: "#1d4ed8",
+                          backgroundColor:
+                            "#dbeafe",
+                          borderRadius: "6px",
+                        }}
+                      />
+
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "#64748b",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {formatTarihSaat(
+                          bildirim.atanma_tarihi
+                        )}
+                      </Typography>
+
+                    </Box>
+
+                    <Typography
+                      sx={{
+                        color: "#1e293b",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                      }}
+                    >
+                      {bildirim.musteri_adi || "-"}
+                    </Typography>
+
+                    <Typography
+                      sx={{
+                        color: "#64748b",
+                        fontSize: "13px",
+                        mt: 0.2,
+                      }}
+                    >
+                      Şube:{" "}
+                      {bildirim.sube_adi || "-"}
+                    </Typography>
+
+                    <Typography
+                      sx={{
+                        color: "#475569",
+                        fontSize: "12px",
+                        mt: 0.7,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {bildirim.sorun || "-"}
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent:
+                          "space-between",
+                        alignItems: "center",
+                        mt: 1.2,
+                        gap: 1,
+                      }}
+                    >
+
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          handleBildirimClose();
+                          navigate(
+                            "/yerinde-destek"
+                          );
+                        }}
+                        sx={{
+                          textTransform: "none",
+                          minWidth: "auto",
+                          px: 1.2,
+                          py: 0.4,
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                        }}
+                      >
+                        İşe Git
+                      </Button>
+
+                      <Button
+                        size="small"
+                        startIcon={
+                          <DoneIcon />
+                        }
+                        onClick={() =>
+                          handleYerindeDestekBildirimGordum(
+                            bildirim
+                          )
+                        }
+                        sx={{
+                          textTransform: "none",
+                          minWidth: "auto",
+                          px: 1.2,
+                          py: 0.4,
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#475569",
+
+                          "&:hover": {
+                            backgroundColor:
+                              "#f1f5f9",
+                          },
+                        }}
+                      >
+                        Gördüm
+                      </Button>
+
+                    </Box>
+
+                  </Box>
+
+                )
+              )}
+
+
+              {/* YAZARKASA BİLDİRİMLERİ */}
+
               {yazarkasaBildirimleri.map(
                 (bildirim) => (
 
                   <Box
                     key={
-                      bildirim.bildirimAnahtari
+                      `yazarkasa-${bildirim.bildirimAnahtari}`
                     }
                     sx={{
                       px: 2.2,
@@ -922,7 +1375,6 @@ function Header() {
                         }}
                       />
 
-
                       <Typography
                         variant="caption"
                         sx={{
@@ -938,7 +1390,6 @@ function Header() {
 
                     </Box>
 
-
                     <Typography
                       sx={{
                         color: "#1e293b",
@@ -946,11 +1397,8 @@ function Header() {
                         fontSize: "14px",
                       }}
                     >
-                      {
-                        bildirim.musteri_adi
-                      }
+                      {bildirim.musteri_adi}
                     </Typography>
-
 
                     <Typography
                       sx={{
@@ -960,11 +1408,8 @@ function Header() {
                       }}
                     >
                       Şube:{" "}
-                      {
-                        bildirim.sube_adi
-                      }
+                      {bildirim.sube_adi}
                     </Typography>
-
 
                     <Typography
                       sx={{
@@ -974,23 +1419,42 @@ function Header() {
                       }}
                     >
                       {bildirim.marka || "-"}
-
                       {" • "}
-
                       Sicil No:{" "}
-
                       {bildirim.sicil_no || "-"}
                     </Typography>
-
 
                     <Box
                       sx={{
                         display: "flex",
                         justifyContent:
-                          "flex-end",
+                          "space-between",
+                        alignItems: "center",
                         mt: 1.2,
+                        gap: 1,
                       }}
                     >
+
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          handleBildirimClose();
+                          navigate(
+                            "/raporlar?sekme=yazarkasalar"
+                          );
+                        }}
+                        sx={{
+                          textTransform: "none",
+                          minWidth: "auto",
+                          px: 1.2,
+                          py: 0.4,
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Raporlara Git
+                      </Button>
 
                       <Button
                         size="small"
@@ -1032,44 +1496,6 @@ function Header() {
 
           )}
 
-
-          {yazarkasaBildirimleri.length >
-            0 && (
-
-            <>
-
-              <Divider />
-
-
-              <Box sx={{ p: 1 }}>
-
-                <MenuItem
-                  onClick={() => {
-
-                    handleBildirimClose();
-
-                    navigate(
-                      "/raporlar?sekme=yazarkasalar"
-                    );
-
-                  }}
-                  sx={{
-                    justifyContent:
-                      "center",
-                    borderRadius: "8px",
-                    color: "#2563eb",
-                    fontWeight: 600,
-                    fontSize: "13px",
-                  }}
-                >
-                  Raporlara Git
-                </MenuItem>
-
-              </Box>
-
-            </>
-
-          )}
 
         </Menu>
 
