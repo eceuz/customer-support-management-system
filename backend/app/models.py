@@ -44,7 +44,6 @@ class Musteriler(Base):
         nullable=False
     )
 
-    # Relationships
     subeler = relationship(
         "Subeler",
         back_populates="musteri"
@@ -85,7 +84,6 @@ class Subeler(Base):
         default=False
     )
 
-    # Relationships
     musteri = relationship(
         "Musteriler",
         back_populates="subeler"
@@ -101,7 +99,6 @@ class Subeler(Base):
         back_populates="sube"
     )
 
-    # Yerinde destek
     ariza_kayitlari = relationship(
         "ArizaKayitlari",
         back_populates="sube"
@@ -131,32 +128,30 @@ class Kullanicilar(Base):
         nullable=False
     )
 
+    # Geçerli uygulama rolleri:
+    # ADMİN, YÖNETİCİ, DESTEK, İZLEYİCİ
     rol = Column(
         String(20),
         nullable=False
     )
 
-    # Çağrı kayıtları
     cagri_kayitlari = relationship(
         "CagriKayitlari",
         back_populates="kullanici"
     )
 
-    # Kullanıcının oluşturduğu yerinde destek arızaları
     olusturulan_arizalar = relationship(
         "ArizaKayitlari",
         foreign_keys="ArizaKayitlari.olusturan_kullanici_id",
         back_populates="olusturan_kullanici"
     )
 
-    # Kullanıcının üzerine atanmış işler
     atanan_arizalar = relationship(
         "ArizaKayitlari",
         foreign_keys="ArizaKayitlari.atanan_kullanici_id",
         back_populates="atanan_kullanici"
     )
 
-    # Kullanıcının arızalara eklediği işlemler
     ariza_islemleri = relationship(
         "ArizaIslemleri",
         back_populates="kullanici"
@@ -248,7 +243,6 @@ class CagriKayitlari(Base):
         nullable=True
     )
 
-    # Relationships
     sube = relationship(
         "Subeler",
         back_populates="cagri_kayitlari"
@@ -327,7 +321,6 @@ class Yazarkasalar(Base):
         nullable=True
     )
 
-    # Relationship
     sube = relationship(
         "Subeler",
         back_populates="yazarkasalar"
@@ -353,15 +346,12 @@ class ArizaKayitlari(Base):
         nullable=False
     )
 
-    # Arızayı sisteme kim açtı?
     olusturan_kullanici_id = Column(
         Integer,
         ForeignKey("KULLANICILAR.kullanici_id"),
         nullable=False
     )
 
-    # Yönetici işi kime atadı?
-    # Arıza ilk açıldığında henüz kimseye atanmayabileceği için nullable=True
     atanan_kullanici_id = Column(
         Integer,
         ForeignKey("KULLANICILAR.kullanici_id"),
@@ -398,8 +388,6 @@ class ArizaKayitlari(Base):
         DateTime,
         nullable=True
     )
-
-    # Relationships
 
     sube = relationship(
         "Subeler",
@@ -443,7 +431,6 @@ class ArizaIslemleri(Base):
         nullable=False
     )
 
-    # Bu işlemi hangi personel yaptı?
     kullanici_id = Column(
         Integer,
         ForeignKey("KULLANICILAR.kullanici_id"),
@@ -469,8 +456,6 @@ class ArizaIslemleri(Base):
         DateTime,
         default=lambda: datetime.utcnow() + timedelta(hours=3)
     )
-
-    # Relationships
 
     ariza = relationship(
         "ArizaKayitlari",

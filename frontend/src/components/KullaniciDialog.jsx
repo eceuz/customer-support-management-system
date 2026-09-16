@@ -167,6 +167,10 @@ function KullaniciDialog({
                   ADMİN
                 </MenuItem>
 
+                <MenuItem value="YÖNETİCİ">
+                  YÖNETİCİ
+                </MenuItem>
+
                 <MenuItem value="DESTEK">
                   DESTEK
                 </MenuItem>

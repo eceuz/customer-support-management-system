@@ -37,14 +37,18 @@ function YerindeDestek() {
 
 
     // =========================================================
-    // ŞİMDİLİK ADMİN = YÖNETİCİ
-    //
-    // Daha sonra gerçek YÖNETİCİ rolünü
-    // eklediğimizde burayı değiştireceğiz.
+    // ROL KONTROLLERİ
+    // ADMİN ve YÖNETİCİ iş yönetimini görebilir.
+    // DESTEK yalnızca kendisine atanan işleri görür.
+    // İZLEYİCİ yalnızca kayıtları görüntüler.
     // =========================================================
 
     const yoneticiMi =
-        kullaniciRol === "ADMİN";
+        kullaniciRol === "ADMİN" ||
+        kullaniciRol === "YÖNETİCİ";
+
+    const destekMi =
+        kullaniciRol === "DESTEK";
 
 
     // =========================================================
@@ -207,7 +211,7 @@ function YerindeDestek() {
 
                         {/* DESTEK PERSONELİ */}
 
-                        {!yoneticiMi && (
+                        {destekMi && (
 
                             <Tab
                                 label="Bana Atanan İşler"
@@ -282,7 +286,7 @@ function YerindeDestek() {
 
             {
                 aktifSekme === 1 &&
-                !yoneticiMi && (
+                destekMi && (
 
                     <Box
                         sx={{

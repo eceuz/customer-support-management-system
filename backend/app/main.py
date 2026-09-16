@@ -5,7 +5,6 @@ from typing import Optional
 from fastapi import Query
 from .database import Base, engine, get_db
 from . import schemas, crud, models
-from .security import create_access_token
 from .security import create_access_token, get_current_user, require_roles
 Base.metadata.create_all(bind=engine)
 
@@ -87,7 +86,7 @@ def kullanici_olustur(
 def kullanicilari_getir(
     db: Session = Depends(get_db),
     current_user: models.Kullanicilar = Depends(
-        require_roles("ADMİN")
+        require_roles("ADMİN", "YÖNETİCİ")
     )
 ):
     return crud.get_kullanicilar(db)
@@ -248,7 +247,7 @@ def kullanici_guncelle(
     )
 ):
 
-    izinli_roller = ["ADMİN", "DESTEK", "İZLEYİCİ"]
+    izinli_roller = ["ADMİN", "YÖNETİCİ", "DESTEK", "İZLEYİCİ"]
 
     if kullanici.rol not in izinli_roller:
         raise HTTPException(
@@ -442,7 +441,7 @@ def yazarkasa_olustur(
     yazarkasa: schemas.YazarkasaCreate,
     db: Session = Depends(get_db),
     current_user: models.Kullanicilar = Depends(
-        require_roles("ADMİN", "DESTEK")
+        require_roles("ADMİN", "YÖNETİCİ", "DESTEK")
     )
 ):
 
@@ -613,7 +612,7 @@ def ariza_olustur(
     ariza: schemas.ArizaKaydiCreate,
     db: Session = Depends(get_db),
     current_user: models.Kullanicilar = Depends(
-        require_roles("ADMİN", "DESTEK")
+        require_roles("ADMİN", "YÖNETİCİ", "DESTEK")
     )
 ):
 
@@ -651,7 +650,7 @@ def ariza_olustur(
 def arizalari_listele(
     db: Session = Depends(get_db),
     current_user: models.Kullanicilar = Depends(
-        require_roles("ADMİN", "İZLEYİCİ","DESTEK")
+        require_roles("ADMİN", "YÖNETİCİ", "İZLEYİCİ", "DESTEK")
     )
 ):
 
@@ -669,7 +668,7 @@ def arizalari_listele(
 def bana_atanan_arizalari_getir(
     db: Session = Depends(get_db),
     current_user: models.Kullanicilar = Depends(
-        get_current_user
+        require_roles("DESTEK")
     )
 ):
 
@@ -692,7 +691,7 @@ def arizayi_personele_ata(
     atama: schemas.ArizaAtama,
     db: Session = Depends(get_db),
     current_user: models.Kullanicilar = Depends(
-        require_roles("ADMİN")
+        require_roles("ADMİN", "YÖNETİCİ")
     )
 ):
 
@@ -723,11 +722,11 @@ def arizayi_personele_ata(
             detail="Personel bulunamadı."
         )
 
-    # İzleyiciye iş atanmasın
-    if personel.rol == "İZLEYİCİ":
+    # Yerinde destek işi yalnızca DESTEK rolündeki personele atanabilir.
+    if personel.rol != "DESTEK":
         raise HTTPException(
             status_code=400,
-            detail="İzleyici rolündeki kullanıcıya iş atanamaz."
+            detail="Yerinde destek işi yalnızca DESTEK rolündeki kullanıcıya atanabilir."
         )
 
     return crud.ariza_ata(
@@ -749,7 +748,7 @@ def ariza_ise_baslat(
     ariza_kaydi_id: int,
     db: Session = Depends(get_db),
     current_user: models.Kullanicilar = Depends(
-        require_roles("ADMİN", "DESTEK")
+        require_roles("DESTEK")
     )
 ):
 
@@ -764,12 +763,8 @@ def ariza_ise_baslat(
             detail="Arıza kaydı bulunamadı."
         )
 
-    # Admin dışında herkes sadece kendi işine müdahale edebilir
-    if (
-        current_user.rol != "ADMİN"
-        and ariza.atanan_kullanici_id
-        != current_user.kullanici_id
-    ):
+    # Destek personeli yalnızca kendi üzerine atanmış işe müdahale edebilir.
+    if ariza.atanan_kullanici_id != current_user.kullanici_id:
         raise HTTPException(
             status_code=403,
             detail="Bu iş sizin üzerinize atanmış değil."
@@ -806,7 +801,7 @@ def ariza_islemi_ekle(
     islem: schemas.ArizaIslemCreate,
     db: Session = Depends(get_db),
     current_user: models.Kullanicilar = Depends(
-        require_roles("ADMİN", "DESTEK")
+        require_roles("DESTEK")
     )
 ):
 
@@ -821,11 +816,7 @@ def ariza_islemi_ekle(
             detail="Arıza kaydı bulunamadı."
         )
 
-    if (
-        current_user.rol != "ADMİN"
-        and ariza.atanan_kullanici_id
-        != current_user.kullanici_id
-    ):
+    if ariza.atanan_kullanici_id != current_user.kullanici_id:
         raise HTTPException(
             status_code=403,
             detail="Bu işe işlem ekleme yetkiniz yok."
@@ -857,7 +848,7 @@ def ariza_islemlerini_getir(
     ariza_kaydi_id: int,
     db: Session = Depends(get_db),
     current_user: models.Kullanicilar = Depends(
-        get_current_user
+        require_roles("ADMİN", "YÖNETİCİ", "İZLEYİCİ", "DESTEK")
     )
 ):
 
@@ -873,7 +864,7 @@ def ariza_islemlerini_getir(
         )
 
     # Destek personeli başka personelin iş detayını görmesin.
-    # Admin ve izleyici görüntüleyebilir.
+    # Admin, yönetici ve izleyici görüntüleyebilir.
     if (
         current_user.rol == "DESTEK"
         and ariza.atanan_kullanici_id
@@ -902,7 +893,7 @@ def ariza_tamamla(
     ariza_kaydi_id: int,
     db: Session = Depends(get_db),
     current_user: models.Kullanicilar = Depends(
-        require_roles("ADMİN", "DESTEK")
+        require_roles("DESTEK")
     )
 ):
 
@@ -917,11 +908,7 @@ def ariza_tamamla(
             detail="Arıza kaydı bulunamadı."
         )
 
-    if (
-        current_user.rol != "ADMİN"
-        and ariza.atanan_kullanici_id
-        != current_user.kullanici_id
-    ):
+    if ariza.atanan_kullanici_id != current_user.kullanici_id:
         raise HTTPException(
             status_code=403,
             detail="Bu işi tamamlama yetkiniz yok."

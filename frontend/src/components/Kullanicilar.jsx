@@ -433,11 +433,7 @@ function Kullanicilar() {
                           fontWeight: 500,
                         }}
                       >
-                        {kullanici.rol === "ADMİN"
-                          ? "ADMİN"
-                          : kullanici.rol === "İZLEYİCİ"
-                          ? "İZLEYİCİ"
-                          : "DESTEK"}
+                        {kullanici.rol || "-"}
                       </TableCell>
 
 

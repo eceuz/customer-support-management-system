@@ -1,18 +1,22 @@
-from typing import Optional
+from typing import Optional, Literal
+from decimal import Decimal
+from datetime import date, datetime
 
 from pydantic import BaseModel
 
-from decimal import Decimal
+
+RolTipi = Literal["ADMİN", "YÖNETİCİ", "DESTEK", "İZLEYİCİ"]
 
 
 class MusteriCreate(BaseModel):
     cari_kodu: int
-    cari_adi:Optional[str] = None
+    cari_adi: Optional[str] = None
     musteri_adi: str | None = None
 
+
 class MusteriUpdate(BaseModel):
-    cari_kodu:Optional[int] = None
-    cari_adi:Optional[str] = None
+    cari_kodu: Optional[int] = None
+    cari_adi: Optional[str] = None
     musteri_adi: str | None = None
 
 
@@ -24,6 +28,7 @@ class MusteriResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class SubeCreate(BaseModel):
     musteri_id: int
@@ -42,6 +47,7 @@ class SubeResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class ArizaTipiCreate(BaseModel):
     ariza_tipi_adi: str
 
@@ -53,23 +59,24 @@ class ArizaTipiResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class KullaniciCreate(BaseModel):
     kullanici_adi: str
     sifre: str
-    rol: str = "DESTEK"
+    rol: RolTipi = "DESTEK"
+
 
 class KullaniciUpdate(BaseModel):
     kullanici_adi: str
     sifre: str | None = None
-    rol: str
+    rol: RolTipi
+
 
 class KullaniciResponse(BaseModel):
     kullanici_id: int
     kullanici_adi: str
     rol: str
 
-
-from datetime import date, datetime
 
 class CagriCreate(BaseModel):
     sube_id: int
@@ -79,7 +86,7 @@ class CagriCreate(BaseModel):
     gorusulen_kisi: str | None = None
     yapilanlar: str | None = None
     sonuc: str | None = None
-    tarih : datetime | None = None
+    tarih: datetime | None = None
 
 
 class CagriResponse(BaseModel):
@@ -94,9 +101,9 @@ class CagriResponse(BaseModel):
     tarih: datetime
     bakim_anlasmasi_var_mi: bool
 
-
     class Config:
         from_attributes = True
+
 
 class LoginRequest(BaseModel):
     kullanici_adi: str
@@ -107,31 +114,20 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str
 
-from datetime import datetime
 
 class CagriListeResponse(BaseModel):
-
     cagri_kaydi_id: int
-
     tarih: datetime
-
     telefon: str | None
-
     gorusulen_kisi: str | None
-
     yapilanlar: str | None
-
     sonuc: str | None
-
     musteri_adi: str
-
     sube_adi: str
-
     ariza_tipi_adi: str
-
     kullanici_adi: str
+    bakim_anlasmasi_var_mi: bool
 
-    bakim_anlasmasi_var_mi: bool 
 
 class DashboardResponse(BaseModel):
     bugun_acilan: int
@@ -139,7 +135,6 @@ class DashboardResponse(BaseModel):
     servise_aktarilan: int
     toplam_musteri: int
 
-from datetime import datetime
 
 class RaporResponse(BaseModel):
     cagri_kayit_id: int
@@ -151,6 +146,7 @@ class RaporResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class YazarkasaCreate(BaseModel):
     sube_id: int
@@ -194,23 +190,20 @@ class YazarkasaResponse(BaseModel):
 
 class ArizaKaydiCreate(BaseModel):
     sube_id: int
-    sorun:str
+    sorun: str
 
 
-class ArizaAtama (BaseModel):
+class ArizaAtama(BaseModel):
     atanan_kullanici_id: int
 
 
 class ArizaKaydiResponse(BaseModel):
     ariza_kaydi_id: int
     sube_id: int
-
     olusturan_kullanici_id: int
     atanan_kullanici_id: Optional[int] = None
-
     sorun: str
     durum: str
-
     olusturma_tarihi: datetime
     atanma_tarihi: Optional[datetime] = None
     ise_baslama_tarihi: Optional[datetime] = None
@@ -222,18 +215,13 @@ class ArizaKaydiResponse(BaseModel):
 
 class ArizaListeResponse(BaseModel):
     ariza_kaydi_id: int
-
     musteri_adi: str
     sube_adi: str
-
     sorun: str
     durum: str
-
     olusturan_kullanici_adi: str
-
     atanan_kullanici_id: Optional[int] = None
     atanan_kullanici_adi: Optional[str] = None
-
     olusturma_tarihi: datetime
     atanma_tarihi: Optional[datetime] = None
     ise_baslama_tarihi: Optional[datetime] = None
@@ -250,13 +238,10 @@ class ArizaIslemResponse(BaseModel):
     islem_id: int
     ariza_kaydi_id: int
     kullanici_id: int
-
     yapilan_islem: str
     ucret: Optional[Decimal] = None
     konsinye_urun_bilgisi: Optional[str] = None
-
     islem_tarihi: datetime
 
     class Config:
         from_attributes = True
-
